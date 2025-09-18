@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <script type="text/javascript">
+        if (location.protocol == 'http:')
+            location.href = location.href.replace(/^http:/, 'https:');
+    </script>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="black">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="description" content="Приложение для умного поиска 'половинки' и проникновения в тайну гармоничных отношений">
+    <title>Люди как пазлы</title>
+    <link rel="stylesheet" href="core.css?v=1">
+    <link rel="stylesheet" href="app.css?v=1">
+    <link rel="manifest" href="app.webmanifest">
+    <link rel="apple-touch-icon" href="icons/app192.png">
+    <link rel="icon" href="icons/app48.png">
+    <link rel="shortcut icon" href="icons/app48.png">
+    <script type="text/javascript" src="core.js?v=1"></script>
+    <script type="text/javascript" src="data.js?v=1"></script>
+    <script type="text/javascript" src="app.js?v=1"></script>
+    <script src="browser.min.js"></script>
+    <script src="sdk.js"></script>
+</head>
+<body>
+
+
+<h1>
+    <a onclick="goHome()" title="Перейти к началу">
+        Люди как пазлы
+    </a>
+</h1>
+
+
+<section data-name="start" hidden="">
+<div></div>
+<div>
+    <hr/>
+    <h3>Приложение для умного поиска&nbsp;"половинки" и&nbsp;проникновения&nbsp;в&nbsp;тайну гармоничных&nbsp;отношений.</h3>
+    <h3><strong>Выберите своё...</strong></h3>
+</div>
+<fieldset class="pick">
+    <hr/>
+    <div class="grid">
+        <button onclick="start(1)" class="deep know">Я мужчина</button>
+        <button onclick="start(2)" class="deep deny">Я женщина</button>
+    </div>
+</fieldset>
+</section>
+
+
+<section data-name="verify" hidden="">
+<h2 class="care">Верификация</h2>
+<div>
+    <hr/>
+    <p><strong>Значки неверифицированных профилей на&nbsp;карте <em>выделены затемнением</em>. Проверка профилей позволяет повысить адекватность и эффективность поиска.</strong> Отметка о пройденной верификации означает, что авторы проекта пообщались с&nbsp;пользователем и убедились в том, что&nbsp;основные параметры его профиля <em class="care">(социотип, психотип, пол и возраст)</em> правдоподобны, <em class="deny">однако полной гарантии достоверности такая проверка не даёт</em>. Если&nbsp;после проверки пользователь изменит значение хотя бы одного из названных выше&nbsp;параметров, отметка о верификации аннулируется. С заявками на верификацию <strong>обращайтесь в <a onclick="visit()">сообщество</a></strong>.</p>
+    <p class="grow">Каждую неделю дарим пять верификаций по&nbsp;конкурсу. Чтобы принять участие, нужно опубликовать на своей странице <strong>красивый пост со ссылкой на приложение и&nbsp;хэш-тегом #люди_как_пазлы</strong>. </p>
+</div>
+<fieldset>
+    <hr/>
+    <button onclick="history.back()">Вернуться</button>
+</fieldset>
+</section>
+
+
+<main>
+<div class="care">
+    <div hidden class="alt">
+        Представляем вам карту психосоциотипической совместимости, на&nbsp;примере персонажей художественных произведений. <strong>Исследуйте эту карту, чтобы&nbsp;понять, принцип её работы.</strong> <br/>Реальных людей вы сможете здесь увидеть&nbsp;сразу&nbsp;после&nbsp;того, как заполните свой&nbsp;личный&nbsp;профиль.
+    </div>
+    <div hidden class="alt">
+        <span><a onclick="displayFilter(3, -1)">Выборка:</a> я и герои произведений.<br/> <a onclick="displayFilter(3, 0)">Показать реальных людей</a></span>
+        <a class="icon-sliders" onclick="displayFilter(3, -1)" ></a>
+    </div>
+    <div hidden class="alt">
+        <span><a onclick="displayFilter(3)">Выборка:</a> <i>только проверенные</i>,<br/> возраст — <i>18-81</i>, ≤ <i>5000</i> км, ≤ <i>14</i> дн.</span>
+        <a class="icon-sliders" onclick="displayFilter(3)" ></a>
+    </div>
+    <div hidden class="alt">
+        <div class="grid">
+            <div class="colspan-2">
+                <label><input type="radio" name="prop_mode" value="1" data-short="только проверенные" data-color="grow" /> Только проверенные профили</label>
+                <label><input type="radio" name="prop_mode" value="0" data-short="проверенные и нет" data-color="deny" /> Проверенные и нет</label>
+                <label><input type="radio" name="prop_mode" value="-1" data-color="care" /> Я и герои произведений</label>
+            </div>
+            <input type="text" class="colspan-2" name="prop_distance" data-format="`В радиусе (км) ≤ ${window.prop_distance}`" />
+            <input type="text" class="colspan-2" name="prop_activity" data-format="`Активность (дней назад) ≤ ${window.prop_activity}`" />
+            <input type="text" name="prop_age" data-format="`Возраст — ${window.prop_age[0]}-${window.prop_age[1]}`" />
+            <button onclick="applyFilter()">Найти</button>
+        </div>
+    </div>
+</div>
+<div class="flex" id="map">
+</div>
+<div class="hint deny" hidden="">
+    <hr>
+    <p>Если ничего не нашлось или нашлось слишком мало: 1) попробуйте <a onclick="displayFilter(3)" class="deny">расширить границы поиска</a>; 2) <i class="notable-orange">расскажите о нашем сервисе своим друзьям и знакомым</i> — <strong>чем&nbsp;больше людей узнает об этом приложении, тем&nbsp;больше интересных вариантов мы сможем вам показать</strong>.</p>
+</div>
+<div>
+    <hr>
+    <p>Полноценная любовь между мужчиной и женщиной включает в себя влечение души (дружбу), влечение ума (уважение) и влечение тела (страсть). Возможно, вам встречалось подобное определение. Звучит довольно интересно и как будто бы просто, но&nbsp;есть ли&nbsp;тут какой-нибудь подвох, давайте разберёмся. Со страстью действительно всё&nbsp;ясно, с уважением, наверное, тоже понятно, но вот с дружбой, с влечением души... <strong>Легко ли увидеть и понять душу? Не&nbsp;слишком ли часто мы обманываемся в&nbsp;этом, приписывая свои собственные или&nbsp;просто желаемые свойства душе другого&nbsp;человека?</strong></p>
+    <p class="care"><strong>Можно ли как-то избежать подобных, дорогостоящих порой, ошибок?</strong><br/>Наш ответ — да, можно! И помогут нам знания специальных разделов прикладной психологии, переведённые в доступную форму и сконцентрированные в этом потрясающем приложении.</p>
+    <p>Природа человеческой души поддаётся логическому осмыслению в степени, достаточной для того, чтобы получать от этого осмысления и понимания ощутимую пользу. Под словом "душа" на практике мы обычно подразумеваем нечто отвечающее за&nbsp;восприятие окружающего мира, за&nbsp;предрасположенности, предпочтения и&nbsp;мотивы. <strong>Приложение "Люди как пазлы" поможет нам научиться лучше видеть и&nbsp;понимать души друг друга, определять уровень их сочетаемости и строить на этой основе гармоничные отношения.</strong></p>
+    <p class="grow"><strong>Гармония — это непротиворечащее дополнение.</strong> По-настоящему гармоничные отношения подразумевают не только комфорт, но и взаимное развитие.</p>
+</div>
+<div>
+    <hr/>
+    <p><strong>Авторы:</strong> Николай <a onclick="visit()" class="know">@sdrawerohs</a> и&nbsp;Алиса <a onclick="visit('hobbystu')" class="know">@hobbystu</a>. Наши проекты: <a onclick="visit('lexigo')" class="grow">Упрямый Инглиш</a>, <a onclick="visit('lifetuner')" class="pick">Прогрессинатор</a>, <a onclick="visit('pogodavdometer')" class="care">Погодавдо-метр</a> и другое. Ваша поддержка поможет приблизить рождение нового шедевра.</p>
+</div>
+<fieldset>
+    <hr/>
+    <div class="grid">
+        <button class="keep" onclick="location.hash = 'profile'">Мой профиль</button>
+        <button class="care" onclick="visit('featured')">Поделиться</button>
+    </div>
+</fieldset>
+</main>
+
+
+<section data-name="profile">
+<h2>Профиль</h2>
+<div>
+    <hr/>
+    <div class="grid">
+        <input type="text" name="name" maxlength="99" placeholder="Имя" />
+        <div class="rowspan-2" id="badge-place"></div>
+        <select name="test-s"></select>
+        <select name="test-p"></select>
+        <select name="sex">
+            <option value="1">Муж.</option>
+            <option value="2">Жен.</option>
+        </select>
+    </div>
+</div>
+<div class="hint">
+    <hr/>
+    <div></div>
+</div>
+<div class="hint">
+    <hr/>
+    <div></div>
+</div>
+<div data-part="additional">
+    <hr/>
+    <div class="grid">
+        <input class="colspan-2 link" type="text" name="link" maxlength="99" placeholder="Веб-адрес" onclick="this.value && openExternalLink(this.value)" onfocus="this.blur()" />
+        <input type="text" name="location" placeholder="Местоположение" />
+        <input type="text" name="year" maxlength="4" placeholder="Год рождения" />
+    </div>
+    <p><strong>Все поля формы обязательны для заполнения.</strong> В графе "Местоположение" укажите географические координаты в&nbsp;формате <em class="know">55.05336,&nbsp;82.87614</em> или можем <a class="know" onclick="findMe()">использовать геолокацию устройства</a>, автоматически сместив позицию на пару десятков километров, <em class="deny">чтобы не выдавать вашего точного&nbsp;местоположения</em>.</p>
+</div>
+<fieldset>
+    <hr/>
+    <div class="grid">
+        <button class="grow" onclick="saveProfile()">Сохранить</button>
+        <button onclick="history.back()">Вернуться</button>
+    </div>
+</fieldset>
+</section>
+
+
+<section data-name="spec-s">
+<h2>Описание социотипа</h2>
+<div>
+    <hr/>
+    <div data-name="spec-s/0">
+        <h3>Искатель (ИЛЭ)</h3>
+        <p><strong>Пытливый, изобретательный, увлекающийся.</strong> Интуитивно-логический экстраверт (ИЛЭ) из&nbsp;квадры исследователей.  <strong>Мотивация:</strong> интересные идеи, свобода экспериментов, отсутствие рутины. <strong>Недостатки:</strong> хаотичен в делах, не&nbsp;доводит начатое до конца.</p>
+    </div>
+    <div data-name="spec-s/1">
+        <h3>Наблюдатель (СЭИ)</h3>
+        <p><strong>Мирный, домашний, бережливый.</strong> Сенсорно-этический интроверт (СЭИ) из&nbsp;квадры исследователей.  <strong>Мотивация:</strong> гармония, комфорт, отсутствие стресса. <strong>Недостатки:</strong> избегает ответственности, склонен "плыть по течению".</p>
+    </div>
+    <div data-name="spec-s/2">
+        <h3>Энтузиаст (ЭСЭ)</h3>
+        <p><strong>Энергичный, открытый, заботливый.</strong> Этико-сенсорный экстраверт (ЭСЭ) из&nbsp;квадры исследователей.  <strong>Мотивация:</strong> внимание людей, новые впечатления, позитивные эмоции. <strong>Недостатки:</strong> поспешность в&nbsp;выводах и решениях, зависимость от&nbsp;мнения окружающих.</p>
+    </div>
+    <div data-name="spec-s/3">
+        <h3>Аналитик (ЛИИ)</h3>
+        <p><strong>Логичный, разборчивый, принципиальный.</strong> Логико-интуитивный интроверт (ЛИИ) из&nbsp;квадры исследова&shy;телей.  <strong>Мотивация:</strong> понимание законов мира, справедливость, работа в&nbsp;одиночку. <strong>Недостатки:</strong> упрямство, неприязнь к&nbsp;необходимости обеспечения&nbsp;быта.</p>
+    </div>
+    <div data-name="spec-s/4">
+        <h3>Наставник (ЭИЭ)</h3>
+        <p><strong>Невозмутимый, воспри­имчивый, эстетичный.</strong> Этико-интуитивный экстраверт (ЭИЭ) из&nbsp;квадры воплотителей.  <strong>Мотивация:</strong> влияние на людей, раскрытие подтекстов, яркие переживания. <strong>Недостатки:</strong> может манипулировать, слишком погружается в&nbsp;свои эмоции.</p>    </div>
+    <div data-name="spec-s/5">
+        <h3>Блюститель (ЛСИ)</h3>
+        <p><strong>Строгий, уверенный, последовательный.</strong> Логико-сенсорный интроверт (ЛСИ) из&nbsp;квадры воплотителей.  <strong>Мотивация:</strong> ясные правила, система, надёжность. <strong>Недостатки:</strong> бывает занудным, не любит импровизацию.</p>
+    </div>
+    <div data-name="spec-s/6">
+        <h3>Управленец (СЛЭ)</h3>
+        <p><strong>Решительный, упорный, уверенный в&nbsp;себе.</strong> Сенсорно-логический экстраверт (СЛЭ) из&nbsp;квадры воплотителей.  <strong>Мотивация:</strong> победа, контроль, действие. <strong>Недостатки:</strong> может быть грубым, нетерпим к слабостям.</p>
+    </div>
+    <div data-name="spec-s/7">
+        <h3>Лирик (ИЭИ)</h3>
+        <p><strong>Мечтательный, драматичный, чувственный.</strong> Интуитивно-этический интроверт (ИЭИ) из&nbsp;квадры воплотителей.  <strong>Мотивация:</strong> красота, предчувствия, свобо&shy;да от рамок. <strong>Недостатки:</strong> оторванность от реальности, непредусмотрительность.</p>
+    </div>
+    <div data-name="spec-s/8">
+        <h3>Предприниматель (ЛИЭ)</h3>
+        <p><strong>Азартный, деятельный, целеустремленный.</strong> Логико-интуитивный экстраверт (ЛИЭ) из&nbsp;квадры оптимиза&shy;торов. <strong>Мотивация:</strong> эффективность, свобода, сложные задачи. <strong>Недостатки:</strong> бывает резким, игнорирует чувства, хаотичен в&nbsp;быту.</p>
+    </div>
+    <div data-name="spec-s/9">
+        <h3>Хранитель (ЭСИ)</h3>
+        <p><strong>Сдержанный, осмотрительный, постоянный.</strong> Этико-сенсорный интроверт (ЭСИ) из&nbsp;квадры оптимизаторов.  <strong>Мотивация:</strong> порядок, мораль, дисциплина. <strong>Недостатки:</strong> чёрно-белое мышление, склонность к&nbsp;избыточному контролю.</p>
+    </div>
+    <div data-name="spec-s/10">
+        <h3>Политик (СЭЭ)</h3>
+        <p><strong>Напористый, дерзкий, амбициозный.</strong> Сенсорно-этический экстраверт (СЭЭ) из&nbsp;квадры оптимизаторов.  <strong>Мотивация:</strong> влияние, статус, признание. <strong>Недостатки:</strong> может быть поверхностным, склонен к&nbsp;манипуляциям.</p>
+    </div>
+    <div data-name="spec-s/11">
+        <h3>Критик (ИЛИ)</h3>
+        <p><strong>Отстраненный, скептичный, своенравный.</strong> Интуитивно-логический интроверт (ИЛИ) из&nbsp;квадры оптимизаторов.  <strong>Мотивация:</strong> понимание рисков, безопасность, глубина анализа. <strong>Недостатки:</strong> медлительность, пессимизм, прокрастинация.</p>
+    </div>
+    <div data-name="spec-s/12">
+        <h3>Дипломат (ИЭЭ)</h3>
+        <p><strong>Любопытный, подвижный, обходительный.</strong> Интуитивно-этический экстраверт (ИЭЭ) из&nbsp;квадры стабилизаторов.  <strong>Мотивация:</strong> отношения, новизна, уникальность. <strong>Недостатки:</strong> бывает поверхностным и недостаточно искренним.</p>
+    </div>
+    <div data-name="spec-s/13">
+        <h3>Мастер (СЛИ)</h3>
+        <p><strong>Практичный, основательный, автономный.</strong> Сенсорно-логический интроверт (СЛИ) из&nbsp;квадры стабилизаторов.  <strong>Мотивация:</strong> удобство, отсутствие суеты, конкретные результаты. <strong>Недостатки:</strong> может казаться холодным, не любит объяснять свои действия.</p>
+    </div>
+    <div data-name="spec-s/14">
+        <h3>Администратор (ЛСЭ)</h3>
+        <p><strong>Собранный, прагматичный, деловой.</strong> Логико-сенсорный экстраверт (ЛСЭ) из&nbsp;квадры стабилизаторов. <strong>Мотивация:</strong> чёткие задачи, результат, стабильность. <strong>Недостатки:</strong> раздражается от некомпетентности, бывает жёстким.</p>
+    </div>
+    <div data-name="spec-s/15">
+        <h3>Гуманист (ЭИИ)</h3>
+        <p><strong>Мягкий, старательный, вдумчивый.</strong> Этико-интуитивный интроверт (ЭИИ) из&nbsp;квадры стабилизаторов.  <strong>Мотивация:</strong> искренность, смыслы, душевный покой. <strong>Недостатки:</strong> может быть слишком пассивным, застревает в рефлексии.</p>
+    </div>
+</div>
+<fieldset>
+    <hr/>
+    <button onclick="history.back()">Вернуться</button>
+</fieldset>
+</section>
+
+
+<section data-name="spec-p">
+<h2>Функции психотипа</h2>
+<div>
+    <hr/>
+    <div>
+        <h3></h3>
+        <p>
+            <em class="grow">1. <strong>Физика</strong> — базовая</em><br/>
+            Функция,&nbsp;в&nbsp;которой человек наиболее компетентен; является основой его личностной идентичности и&nbsp;воспринимается им как наиболее ценная. Человек с&nbsp;избытком проявляет себя в&nbsp;этой области, пренебрегая порой реакцией окружающих.<br/>
+            <em class="care">2. <strong></strong> — творческая</em><br/>
+            Достаточно сильная, наиболее гибкая и&nbsp;хорошо осознаваемая функция.<br/>
+            <em class="deny">3. <strong></strong> — болевая</em><br/>
+            Самая&nbsp;чувствительная к чужим оценкам, положительным и отрицательным.<br/>
+            <em class="know">4. <strong></strong> — фоновая</em><br/>
+            Наименее значимая и наименее развитая функция в&nbsp;структуре личности.
+        </p>
+    </div>
+</div>
+<fieldset>
+    <hr/>
+    <button onclick="history.back()">Вернуться</button>
+</fieldset>
+</section>
+
+
+<section data-name="matching">
+<h2 class="deny">Неверифицированный профиль</h2>
+<div id="matching">
+    <hr/>
+    <div class="grid">
+    </div>
+</div>
+<fieldset>
+    <hr/>
+    <button onclick="location.hash = 'main'">Вернуться к карте</button>
+</fieldset>
+</section>
+
+
+<section data-name="test-s">
+<h2>Определение социотипа</h2>
+<div>
+    <hr/>
+    <p>Выберите варианты, которые кажутся вам более подходящими. <strong>Обратите внимание на&nbsp;слова "по своей природе".</strong> Не спешите с&nbsp;ответами, хорошенько взвесьте каждый из&nbsp;вариантов прежде чем выбрать.</p>
+    <form>
+        <div>
+            <p><strong>В плане <i class="grow">стратегии</i></strong> я по своей <br/> природе скорее человек:</p>
+            <p class="grow">
+                <label><input type="radio" name="EI" value="E"> расширения (универсальный)</label>
+                <label><input type="radio" name="EI" value="I"> углубления (специализированный)</label>
+            </p>
+        </div>
+        <div>
+            <p><strong>В плане <i class="care">восприятия</i></strong> я по своей <br/> природе скорее человек:</p>
+            <p class="care">
+                <label class="radio"><input type="radio" name="NS" value="N"> возможного (мир идей)</label>
+                <label class="radio"><input type="radio" name="NS" value="S"> реального (мир фактов)</label>
+            </p>
+        </div>
+        <div>
+            <p><strong>В плане <i class="deny">общения</i></strong> я по своей <br/> природе скорее человек:</p>
+            <p class="deny">
+                <label class="radio"><input type="radio" name="TF" value="T"> структуры (важнее "что")</label>
+                <label class="radio"><input type="radio" name="TF" value="F"> образа (важнее "как")</label>
+            </p>
+        </div>
+        <div>
+            <p><strong>В плане <i class="pick">тактики</i></strong> я по своей <br/> природе скорее человек:</p>
+            <p class="pick">
+                <label class="radio"><input type="radio" name="JP" value="J"> правила (организация)</label>
+                <label class="radio"><input type="radio" name="JP" value="P"> ситуации (стихийность)</label>
+            </p>
+        </div>
+    </form>
+</div>
+<fieldset>
+    <hr/>
+    <div class="grid">
+        <button class="keep" onclick="acceptTestS()">Сохранить</button>
+        <button onclick="history.back()">Отменить</button>
+    </div>
+</fieldset>
+</section>
+
+
+<section data-name="test-p">
+<h2>Определение психотипа</h2>
+<div>
+    <hr/>
+    <p><strong>Выберите две сферы, в которых вы&nbsp;обычно более гибки/уступчивы</strong> (и,&nbsp;значит, невыбранными должны остаться те, где вы обычно более категоричны/принципиальны):</p>
+    <form>
+        <p class="know">
+            <label><input type="radio" value="Ф"> сфера физического комфорта</label>
+            <label><input type="radio" value="В"> сфера принятия решений</label>
+            <label><input type="radio" value="Э"> сфера переживания эмоций</label>
+            <label><input type="radio" value="Л"> сфера определения смыслов</label>
+        </p>
+    </form>
+    <p class="step2">Из каждой пары выберите теперь по&nbsp;одной такой сфере, где вы обычно проявляете себя более уверенно:</p>
+    <form class="step2">
+        <p class="pick"></p>
+    </form>
+    <form class="step2">
+        <p class="care"></p>
+    </form>
+</div>
+<fieldset>
+    <hr/>
+    <div class="grid">
+        <button class="keep" onclick="acceptTestP()">Сохранить</button>
+        <button onclick="history.back()">Отменить</button>
+    </div>
+</fieldset>
+</section>
+
+
+<div id="status"></div>
+
+
+</body>
+</html>

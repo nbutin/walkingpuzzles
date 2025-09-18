@@ -1,0 +1,8 @@
+{
+  "id": "lookforinside.app",
+  "name": "Люди как пазлы",
+  "description": "Приложение для умного поиска 'половинки' и проникновения в тайну гармоничных отношений",
+  "author": "PHN3UprgHjMPQsiXkqEju9bAqCmD73H6B9",
+  "scope": "lookforinside.web.app",
+  "permissions": ["account", "sign", "externallink"]
+}
