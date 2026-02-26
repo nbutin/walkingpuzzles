@@ -1,14 +1,12 @@
 var core_history_of_embodyings = ['', '', ''];
 
 document.addEventListener('DOMContentLoaded', () => {
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js')
-        .then(() => {
-            console.log('Service Worker Registered');
-        });
-    }
-    location.hash = 'main';
-    window.addEventListener('hashchange', embody);
+    //~ if ('serviceWorker' in navigator) {
+        //~ navigator.serviceWorker.register('sw.js')
+        //~ .then(() => {
+            //~ console.log('Service Worker Registered');
+        //~ });
+    //~ }
 });
 
 
@@ -43,7 +41,8 @@ function fixLayout() {
         vkBridge.send("VKWebAppScroll", {top: 0});
         vkBridge.send('VKWebAppResizeWindow', {
             width: 640,
-            height: Math.max(document.body.offsetHeight + 144, 640),
+            //~ height: Math.max(document.body.offsetHeight + 144, 640),
+            height: Math.max(document.body.offsetHeight + 144 + 82 + 16, 640),
         });
     }
 }
@@ -65,7 +64,7 @@ function coreGetSuiteParamsAll() {
 }
 
 
-// ok
+// 
 function acronym(name) {
     var name = name && `${name}`.split(' ') || [''];
     var abbr = '';
@@ -89,7 +88,7 @@ function coreBadge(image, label, onclick, featured, modifiers) {
     return html;
 }
 
-// OK
+// 
 function htmlBadge(image, label, onclick, class_a, class_b) {
     image = image && image.replaceAll('"', "'") || '';
     label = label && label.replaceAll('"', "'") || '';
@@ -103,28 +102,46 @@ function htmlBadge(image, label, onclick, class_a, class_b) {
         <b ${class_b}></b></a>`;
 }
 
-// OK
+// 
 function initVk() {
     vkBridge
     .send('VKWebAppInit')
     .then(data => {
-        console.log('vkBridge.VKWebAppInit returns', data)
-        if (!data.result) throw new Error();
+        if (!data.result) {
+            throw new Error(`vkBridge returns: ${JSON.stringify(data)}`);
+        }
         console.log('vkBridge initialized');
-//~ localStorage.clear();
-//~ appSaveProps();
         _loadPropsVk();
-        document.body.classList.add('-vk');
-        window.vk_is_recommended = 
-            location.search.includes('vk_is_recommended=1');
-        window.vk_are_notifications_enabled = 
-            location.search.includes('vk_are_notifications_enabled=1');
-        window.vk_is_favorite = 
-            location.search.includes('vk_is_favorite=1');
+        document.body.classList.remove('mode-web');
+        document.body.classList.add('mode-vk');
+        if (admins.includes(window.vk_user_id)) {
+            document.body.classList.add('mode-admin');
+        }
+        let params = new URLSearchParams(location.search);
+        window.vk_is_recommended = parseInt(params.get('vk_is_recommended'));
+        window.vk_are_notifications_enabled = parseInt(params.get('vk_are_notifications_enabled'));
+        window.vk_is_favorite = parseInt(params.get('vk_is_favorite'));
+        redoSocialButtons();
+        vkBridge.send('VKWebAppShowBannerAd', {
+            banner_location: 'bottom'
+        });
     })
     .catch(error => {
-        console.error(error);
+        console.error(data);
     });
+}
+
+function redoSocialButtons(without_resize) {
+    if (window.vk_is_recommended) {
+        document.querySelector('[data-social="is_recommended"]').hidden = true;
+    }
+    if (window.vk_are_notifications_enabled) {
+        document.querySelector('[data-social="are_notifications_enabled"]').hidden = true;
+    }
+    if (window.vk_is_favorite) {
+        document.querySelector('[data-social="is_favorite"]').hidden = true;
+    }
+    if (!without_resize) fixLayout();
 }
 
 
@@ -218,13 +235,19 @@ function appLoadProps() {
 
 function _loadPropsLocal() {
     const props = {};
+    const defaults = _defaults();
     for (name in {prop_version: 0, ...(window.prop_stored  || {}), ...(window.prop_cached  || {})}) {
         if (localStorage[name]) {
             try {
                 props[name] = JSON.parse(localStorage[name]);
             } catch {
                 console.error(`Infalid value in localStorage (${name} = ${localStorage[name].slice(0, 50)})`);
+                if (name in defaults) {
+                    props[name] = defaults[name];
+                }
             }
+        } else if (name in defaults) {
+            props[name] = defaults[name];
         }
     }
     updateProps(props);

@@ -12,16 +12,22 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="description" content="Приложение для умного поиска 'половинки' и проникновения в тайну гармоничных отношений">
     <title>Люди как пазлы</title>
-    <link rel="stylesheet" href="core.css?v=1">
-    <link rel="stylesheet" href="app.css?v=1">
+    <link rel="stylesheet" href="core.css?v=63">
+    <link rel="stylesheet" href="app.css?v=63">
     <link rel="manifest" href="app.webmanifest">
     <link rel="apple-touch-icon" href="icons/app192.png">
     <link rel="icon" href="icons/app48.png">
     <link rel="shortcut icon" href="icons/app48.png">
-    <script type="text/javascript" src="core.js?v=1"></script>
-    <script type="text/javascript" src="data.js?v=1"></script>
-    <script type="text/javascript" src="app.js?v=1"></script>
+    <script type="text/javascript" src="core.js?v=63"></script>
+    <script type="text/javascript" src="data.js?v=63"></script>
+    <script type="text/javascript" src="app.js?v=63"></script>
+<!--
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+-->
     <script src="browser.min.js"></script>
+<!--
+    <script src="https://bastyon.com/js/lib/apps/sdk.js"></script>
+-->
     <script src="sdk.js"></script>
 </head>
 <body>
@@ -55,12 +61,23 @@
 <h2 class="care">Верификация</h2>
 <div>
     <hr/>
-    <p><strong>Значки неверифицированных профилей на&nbsp;карте <em>выделены затемнением</em>. Проверка профилей позволяет повысить адекватность и эффективность поиска.</strong> Отметка о пройденной верификации означает, что авторы проекта пообщались с&nbsp;пользователем и убедились в том, что&nbsp;основные параметры его профиля <em class="care">(социотип, психотип, пол и возраст)</em> правдоподобны, <em class="deny">однако полной гарантии достоверности такая проверка не даёт</em>. Если&nbsp;после проверки пользователь изменит значение хотя бы одного из названных выше&nbsp;параметров, отметка о верификации аннулируется. С заявками на верификацию <strong>обращайтесь в <a onclick="visit()">сообщество</a></strong>.</p>
-    <p class="grow">Каждую неделю дарим пять верификаций по&nbsp;конкурсу. Чтобы принять участие, нужно опубликовать на своей странице <strong>красивый пост со ссылкой на приложение и&nbsp;хэш-тегом #люди_как_пазлы</strong>. </p>
+    <p><strong>Значки неверифицированных профилей на&nbsp;карте <em>выделены затемнением</em>. Проверка профилей позволяет повысить адекватность и эффективность поиска.</strong> Отметка о пройденной верификации означает, что авторы проекта пообщались с&nbsp;пользователем и убедились в том, что его реальные основные параметры <em class="pick">(социотип, психотип, пол и возраст)</em> соответствуют указанным в профиле. <em class="deny">Вероятность ошибки в&nbsp;определении психо- и социотипа такой проверкой не устраняется полностью, однако существенно уменьшается.</em> Если&nbsp;после проверки пользователь изменит какой-то из четырёх, перечисленных выше, параметров, отметка&nbsp;о верификации удаляется.</p>
+<!--
+    <p class="care"><strong>Важно типировать себя правильно</strong>,<br/> потому что иначе оценки и рекомендации, которые вы здесь получите будут ложными и&nbsp;не принесут вам никакой пользы.</p>
+-->
+<!--
+    <p class="grow">Раз в неделю <strong>дарим</strong> пять верификаций по&nbsp;конкурсу. Чтобы принять участие, нужно опубликовать на своей странице <strong>красивый пост со ссылкой на приложение и&nbsp;хэш&shy;тегом #люди_как_пазлы</strong>.</p>
+-->
+    <p class="keep mode-vk">Если вы уверены в том, что правильно определили свои психо- и социотип, <strong>можете пройти автоверификацию</strong>. Эта процедура более быстрая, соответствующий статус применится к вашему профилю моментально. Автоверификация — хороший вариант для тех, <strong>кто не сомневается и хочет получить результат сразу</strong>. Базовую ручную проверку мы&nbsp;проведём в любом случае, но уже не взаимодействуя с вами и аннулируем отметку о вашей верификации, если ваш аккаунт покажется нам подозрительным. </p>
+    <p class="pick">Минимальной визуальной проверке подвергаются все новые, измененные или блокированные другими пользователями профили. За спам и разные непристойности будем безжалостно банить.</p>
 </div>
 <fieldset>
     <hr/>
-    <button onclick="history.back()">Вернуться</button>
+    <div class="grid">
+        <button class="keep colspan-2 mode-vk" onclick="pay(2)">Автоверификация</button>
+        <button class="care colspan-2" onclick="displayAlert(msg_verify)">Заказать верификацию</button>
+        <button class="colspan-2" onclick="goHome()">Вернуться к карте</button>
+    </div>
 </fieldset>
 </section>
 
@@ -68,52 +85,99 @@
 <main>
 <div class="care">
     <div hidden class="alt">
-        Представляем вам карту психосоциотипической совместимости, на&nbsp;примере персонажей художественных произведений. <strong>Исследуйте эту карту, чтобы&nbsp;понять, принцип её работы.</strong> <br/>Реальных людей вы сможете здесь увидеть&nbsp;сразу&nbsp;после&nbsp;того, как заполните свой&nbsp;личный&nbsp;профиль.
+        Представляем вам карту психосоциотипической совместимости на&nbsp;примере персонажей художественных произведений. <strong>Исследуйте эту карту, чтобы&nbsp;понять принцип её работы.</strong> <br/>Реальных людей вы сможете здесь увидеть&nbsp;сразу&nbsp;после&nbsp;того, как заполните свой&nbsp;личный&nbsp;профиль.
     </div>
     <div hidden class="alt">
-        <span><a onclick="displayFilter(3, -1)">Выборка:</a> я и герои произведений.<br/> <a onclick="displayFilter(3, 0)">Показать реальных людей</a></span>
-        <a class="icon-sliders" onclick="displayFilter(3, -1)" ></a>
+        <span>Выборка: <em>я и герои произведений</em>.<br/> <a class="know" onclick="displayFilter(4, 0)">Показать реальных людей.</a></span>
+        <a class="icon-sliders" onclick="displayFilter(4)" ></a>
     </div>
     <div hidden class="alt">
-        <span><a onclick="displayFilter(3)">Выборка:</a> <i>только проверенные</i>,<br/> возраст — <i>18-81</i>, ≤ <i>5000</i> км, ≤ <i>14</i> дн.</span>
-        <a class="icon-sliders" onclick="displayFilter(3)" ></a>
+        <span>Выборка: <em>проверенные и нет</em>,<br/> <a class="know" onclick="displayFilter(4)">возраст — <i>18-81</i>, ≤ <i>5000</i> км, ≤ <i>14</i> дн.</a></span>
+        <a class="icon-sliders" onclick="displayFilter(4)" ></a>
     </div>
     <div hidden class="alt">
-        <div class="grid">
-            <div class="colspan-2">
-                <label><input type="radio" name="prop_mode" value="1" data-short="только проверенные" data-color="grow" /> Только проверенные профили</label>
-                <label><input type="radio" name="prop_mode" value="0" data-short="проверенные и нет" data-color="deny" /> Проверенные и нет</label>
-                <label><input type="radio" name="prop_mode" value="-1" data-color="care" /> Я и герои произведений</label>
+        <span>Выборка: <em>только интересные</em>.<br/> <a class="know" onclick="displayFilter(4)">Другая категория.</a></span>
+        <a class="icon-sliders" onclick="displayFilter(4)" ></a>
+    </div>
+    <div hidden class="alt">
+        <div class="grid type-3">
+            <div class="colspan-3">
+                <label>
+                    <input type="radio" name="prop_mode" value="1" data-short="только проверенные" data-color="grow" />
+                    Только проверенные
+                </label>
+                <label>
+                    <input type="radio" name="prop_mode" value="0" data-short="проверенные и нет" data-color="rest" />
+                    Проверенные и нет
+                </label>
+                <label>
+                    <input type="radio" name="prop_mode" value="-1" data-color="care" />
+                    Я и герои произведений
+                </label>
+                <label>
+                    <input type="radio" name="prop_mode" value="2" data-short="только интересные" data-color="pick" />
+                    Добавленные в Интересное
+                </label>
+                <label>
+                    <input type="radio" name="prop_mode" value="3" data-short="из списка друзей" data-color="keep" />
+                    <span>Из списка моих друзей</span>
+                </label>
             </div>
-            <input type="text" class="colspan-2" name="prop_distance" data-format="`В радиусе (км) ≤ ${window.prop_distance}`" />
-            <input type="text" class="colspan-2" name="prop_activity" data-format="`Активность (дней назад) ≤ ${window.prop_activity}`" />
+            <div class="mode-admin">
+                <label class="care">
+                    <input type="radio" name="prop_mode" value="4" data-short="вновь прибывшие" data-color="care" />
+                </label>
+                <label class="grow">
+                    <input type="radio" name="prop_mode" value="5" data-short="для верификации" data-color="grow" />
+                </label>
+                <label class="keep">
+                    <input type="radio" name="prop_mode" value="6" data-short="автоверифицированные" data-color="keep" />
+                </label>
+                <label class="pick">
+                    <input type="radio" name="prop_mode" value="7" data-short="отредактированные" data-color="pick" />
+                </label>
+                <label class="deny">
+                    <input type="radio" name="prop_mode" value="8" data-short="подозрительные" data-color="deny" />
+                </label>
+            </div>
+            <input type="text" class="colspan-3" name="prop_distance" data-format="`В радиусе (км) ≤ ${window.prop_distance}`" />
+            <input type="text" class="colspan-3" name="prop_activity" data-format="`Активность (дней назад) ≤ ${window.prop_activity}`" />
             <input type="text" name="prop_age" data-format="`Возраст — ${window.prop_age[0]}-${window.prop_age[1]}`" />
-            <button onclick="applyFilter()">Найти</button>
+            <button onclick="applyFilter()">Показать</button>
+            <button class="rest" onclick="embodyMain()">✕</button>
         </div>
     </div>
 </div>
 <div class="flex" id="map">
 </div>
-<div class="hint deny" hidden="">
+<div class="hint care" hidden="">
     <hr>
-    <p>Если ничего не нашлось или нашлось слишком мало: 1) попробуйте <a onclick="displayFilter(3)" class="deny">расширить границы поиска</a>; 2) <i class="notable-orange">расскажите о нашем сервисе своим друзьям и знакомым</i> — <strong>чем&nbsp;больше людей узнает об этом приложении, тем&nbsp;больше интересных вариантов мы сможем вам показать</strong>.</p>
+    <p>Если ничего не нашлось или нашлось, но мало, <a onclick="displayFilter(4)" class="know">расширьте границы поиска</a>, а&nbsp;ещё расскажите об этом сервисе своим друзьям и&nbsp;знакомым — <strong>чем&nbsp;больше людей о&nbsp;нём узнает, тем&nbsp;больше интересных вариантов мы&nbsp;сможем вам показать</strong>.</p>
+    <div class="grid">
+        <button class="keep colspan-2 mode-vk" data-social="is_recommended" onclick="recommend()">Рекомендовать</button>
+        <button class="grow mode-vk" onclick="share()">Пригласить</button>
+        <button class="care mode-vk" onclick="openWallPost()">Поделиться</button>
+        <button class="care colspan-2 mode-web" onclick="openWallPost()">Поделиться</button>
+    </div>
 </div>
 <div>
     <hr>
     <p>Полноценная любовь между мужчиной и женщиной включает в себя влечение души (дружбу), влечение ума (уважение) и влечение тела (страсть). Возможно, вам встречалось подобное определение. Звучит довольно интересно и как будто бы просто, но&nbsp;есть ли&nbsp;тут какой-нибудь подвох, давайте разберёмся. Со страстью действительно всё&nbsp;ясно, с уважением, наверное, тоже понятно, но вот с дружбой, с влечением души... <strong>Легко ли увидеть и понять душу? Не&nbsp;слишком ли часто мы обманываемся в&nbsp;этом, приписывая свои собственные или&nbsp;просто желаемые свойства душе другого&nbsp;человека?</strong></p>
     <p class="care"><strong>Можно ли как-то избежать подобных, дорогостоящих порой, ошибок?</strong><br/>Наш ответ — да, можно! И помогут нам знания специальных разделов прикладной психологии, переведённые в доступную форму и сконцентрированные в этом потрясающем приложении.</p>
     <p>Природа человеческой души поддаётся логическому осмыслению в степени, достаточной для того, чтобы получать от этого осмысления и понимания ощутимую пользу. Под словом "душа" на практике мы обычно подразумеваем нечто отвечающее за&nbsp;восприятие окружающего мира, за&nbsp;предрасположенности, предпочтения и&nbsp;мотивы. <strong>Приложение "Люди как пазлы" поможет нам научиться лучше видеть и&nbsp;понимать души друг друга, определять уровень их сочетаемости и строить на этой основе гармоничные отношения.</strong></p>
-    <p class="grow"><strong>Гармония — это непротиворечащее дополнение.</strong> По-настоящему гармоничные отношения подразумевают не только комфорт, но и взаимное развитие.</p>
+    <p class="grow"><strong>Гармония — это непротиворечащее дополнение</strong>, а гармоничные отношения вдобавок к комфорту подразумевают плодотворность и взаимное развитие.</p>
 </div>
 <div>
     <hr/>
-    <p><strong>Авторы:</strong> Николай <a onclick="visit()" class="know">@sdrawerohs</a> и&nbsp;Алиса <a onclick="visit('hobbystu')" class="know">@hobbystu</a>. Наши проекты: <a onclick="visit('lexigo')" class="grow">Упрямый Инглиш</a>, <a onclick="visit('lifetuner')" class="pick">Прогрессинатор</a>, <a onclick="visit('pogodavdometer')" class="care">Погодавдо-метр</a> и другое. Ваша поддержка поможет приблизить рождение нового шедевра.</p>
+    <p><strong>Авторы:</strong> Николай <a onclick="visit()" class="know">@sdrawerohs</a> и&nbsp;Алиса <a onclick="visit('hobbystu')" class="know">@hobbystu</a>. Наши проекты: <a onclick="visit('lifetuner')" class="pick">Прогрессинатор</a>, <a onclick="visit('pogodavdometer')" class="care">Погодавдометр</a>, <a onclick="visit('lexigo')" class="grow">Бедовый Инглиш</a> и другое. Любая ваша&nbsp;поддержка поможет приблизить рождение нового шедевра.</p>
 </div>
 <fieldset>
     <hr/>
     <div class="grid">
+        <button class="pick colspan-2 mode-vk" data-social="are_notifications_enabled" onclick="allowNotifications()">Да, это интересно</button>
         <button class="keep" onclick="location.hash = 'profile'">Мой профиль</button>
-        <button class="care" onclick="visit('featured')">Поделиться</button>
+        <button class="care" onclick="openWallPost()">Поделиться</button>
+        <button class="grow colspan-2 mode-vk" data-social="is_favorite" onclick="addToFavorites()">Добавить в Избранное</button>
     </div>
 </fieldset>
 </main>
@@ -121,6 +185,7 @@
 
 <section data-name="profile">
 <h2>Профиль</h2>
+<div id="paid" class="care" hidden>Заявка на верификацию принята, и скоро будет обработана. <strong>Спасибо!</strong></div>
 <div>
     <hr/>
     <div class="grid">
@@ -142,20 +207,29 @@
     <hr/>
     <div></div>
 </div>
+<div class="care hint">
+    <hr>
+    <div>
+        <p>Если результаты тестов вызывают у вас сомнения, попробуйте выбрать другие ответы в спорных местах и сравнить получившиеся описания. <em>Важно типировать себя правильно, потому что иначе оценки и рекомендации, которые вы здесь получите будут ложными и&nbsp;не принесут вам никакой пользы.</em></p>
+    </div>
+</div>
 <div data-part="additional">
     <hr/>
     <div class="grid">
-        <input class="colspan-2 link" type="text" name="link" maxlength="99" placeholder="Веб-адрес" onclick="this.value && openExternalLink(this.value)" onfocus="this.blur()" />
+        <input class="colspan-2 link" type="text" name="link" maxlength="99" placeholder="Страница в социальной сети" onclick="this.value && openExternalLink(this.value)" onfocus="this.blur()" />
         <input type="text" name="location" placeholder="Местоположение" />
         <input type="text" name="year" maxlength="4" placeholder="Год рождения" />
     </div>
-    <p><strong>Все поля формы обязательны для заполнения.</strong> В графе "Местоположение" укажите географические координаты в&nbsp;формате <em class="know">55.05336,&nbsp;82.87614</em> или можем <a class="know" onclick="findMe()">использовать геолокацию устройства</a>, автоматически сместив позицию на пару десятков километров, <em class="deny">чтобы не выдавать вашего точного&nbsp;местоположения</em>.</p>
+    <p><strong>Все поля формы обязательны для заполнения.</strong> В графе "Местоположение" укажите географические координаты в&nbsp;формате <em class="know">55.05336,&nbsp;82.87614</em> или можем <a class="know" onclick="findMe()">использовать геолокацию устройства</a>, автоматически сместив позицию на пару десятков километров, <em class="deny">чтобы не выдать вашего точного&nbsp;местоположения</em>.</p>
 </div>
 <fieldset>
     <hr/>
     <div class="grid">
+        <button class="pick colspan-2" onclick="pickOrRelease()">Добавить в Интересное</button>
         <button class="grow" onclick="saveProfile()">Сохранить</button>
-        <button onclick="history.back()">Вернуться</button>
+        <button onclick="goHome()">На главную</button>
+        <button class="mode-admin deep grow colspan-2" onclick="verifyProfile()">Подтвердить верификацию</button>
+        <button class="mode-admin deep deny colspan-2" onclick="blockProfile()">В чёрный список для всех</button>
     </div>
 </fieldset>
 </section>
@@ -243,13 +317,13 @@
     <div>
         <h3></h3>
         <p>
-            <em class="grow">1. <strong>Физика</strong> — базовая</em><br/>
+            <em class="grow">1. <strong>Физика</strong> — приоритетная</em><br/>
             Функция,&nbsp;в&nbsp;которой человек наиболее компетентен; является основой его личностной идентичности и&nbsp;воспринимается им как наиболее ценная. Человек с&nbsp;избытком проявляет себя в&nbsp;этой области, пренебрегая порой реакцией окружающих.<br/>
-            <em class="care">2. <strong></strong> — творческая</em><br/>
+            <em class="care">2. <strong></strong> — гармонизирующая</em><br/>
             Достаточно сильная, наиболее гибкая и&nbsp;хорошо осознаваемая функция.<br/>
-            <em class="deny">3. <strong></strong> — болевая</em><br/>
+            <em class="deny">3. <strong></strong> — сомневающаяся</em><br/>
             Самая&nbsp;чувствительная к чужим оценкам, положительным и отрицательным.<br/>
-            <em class="know">4. <strong></strong> — фоновая</em><br/>
+            <em class="know">4. <strong></strong> — неразборчивая</em><br/>
             Наименее значимая и наименее развитая функция в&nbsp;структуре личности.
         </p>
     </div>
@@ -282,28 +356,28 @@
     <p>Выберите варианты, которые кажутся вам более подходящими. <strong>Обратите внимание на&nbsp;слова "по своей природе".</strong> Не спешите с&nbsp;ответами, хорошенько взвесьте каждый из&nbsp;вариантов прежде чем выбрать.</p>
     <form>
         <div>
-            <p><strong>В плане <i class="grow">стратегии</i></strong> я по своей <br/> природе скорее человек:</p>
+            <p><strong>В плане <em class="grow">стратегии</em></strong> я по своей <br/> природе скорее человек:</p>
             <p class="grow">
-                <label><input type="radio" name="EI" value="E"> расширения (универсальный)</label>
-                <label><input type="radio" name="EI" value="I"> углубления (специализированный)</label>
+                <label><input type="radio" name="EI" value="E"> расширения (разнонаправленный)</label>
+                <label><input type="radio" name="EI" value="I"> углубления (сфокусированный)</label>
             </p>
         </div>
         <div>
-            <p><strong>В плане <i class="care">восприятия</i></strong> я по своей <br/> природе скорее человек:</p>
+            <p><strong>В плане <em class="care">восприятия</em></strong> я по своей <br/> природе скорее человек:</p>
             <p class="care">
                 <label class="radio"><input type="radio" name="NS" value="N"> возможного (мир идей)</label>
                 <label class="radio"><input type="radio" name="NS" value="S"> реального (мир фактов)</label>
             </p>
         </div>
         <div>
-            <p><strong>В плане <i class="deny">общения</i></strong> я по своей <br/> природе скорее человек:</p>
+            <p><strong>В плане <em class="deny">коммуникации</em></strong> я по своей <br/> природе скорее человек:</p>
             <p class="deny">
                 <label class="radio"><input type="radio" name="TF" value="T"> структуры (важнее "что")</label>
                 <label class="radio"><input type="radio" name="TF" value="F"> образа (важнее "как")</label>
             </p>
         </div>
         <div>
-            <p><strong>В плане <i class="pick">тактики</i></strong> я по своей <br/> природе скорее человек:</p>
+            <p><strong>В плане <em class="pick">тактики</em></strong> я по своей <br/> природе скорее человек:</p>
             <p class="pick">
                 <label class="radio"><input type="radio" name="JP" value="J"> правила (организация)</label>
                 <label class="radio"><input type="radio" name="JP" value="P"> ситуации (стихийность)</label>
@@ -325,7 +399,7 @@
 <h2>Определение психотипа</h2>
 <div>
     <hr/>
-    <p><strong>Выберите две сферы, в которых вы&nbsp;обычно более гибки/уступчивы</strong> (и,&nbsp;значит, невыбранными должны остаться те, где вы обычно более категоричны/принципиальны):</p>
+    <p><strong>Выберите две сферы, в которых вы&nbsp;обычно более гибки или уступчивы</strong> (легче идёте на компромисс):</p>
     <form>
         <p class="know">
             <label><input type="radio" value="Ф"> сфера физического комфорта</label>
@@ -352,7 +426,133 @@
 </section>
 
 
+<section data-name="preview">
+<img class="rest" src="preview.jpg">
+<div>
+    <hr/>
+    <p><strong>Приложение "Бедовый Инглиш" будет опубликовано в ближайшее время.</strong> Оно&nbsp;обещает быть классным и мы&nbsp;решили дать здесь его анонс. Если хотите вовремя узнать о релизе, подпишитесь на <a onclick="visit()">наше сообщество</a> и включите колокольчик. Публикации случаются редко и метко — надоедать вам точно не будем, а о новых интересных полезностях сообщим.</p>
+</div>
+<fieldset>
+    <hr/>
+    <div class="grid">
+        <button class="keep colspan-2" onclick="visit()">Открыть страницу сообщества</button>
+        <button class="colspan-2" onclick="history.back()">Вернуться к карте</button>
+    </div>
+</fieldset>
+</section>
+
+
+<section data-name="palette" hidden>
+    <div>
+        <div style="background-color:var(--coaly)">coaly</div>
+        <div style="background-color:var(--coaly-dust)">coaly-dust</div>
+        <div style="background-color:var(--coaly-haze)">coaly-haze</div>
+        <div style="background-color:var(--coaly-snow)">coaly-snow</div>
+        <div style="background-color:var(--snowy-haze)">snowy-haze</div>
+        <div style="background-color:var(--snowy-dust)">snowy-dust</div>
+        <div style="background-color:var(--snowy)">snowy</div>
+        <div style="background-color:var(--rest)">rest</div>
+    </div>
+    <div class="rest">
+        <div style="background-color:var(--base-color)">base-color</div>
+        <div style="background-color:var(--thin-color)">thin-color</div>
+        <div style="background-color:var(--soft-color)">soft-color</div>
+        <div style="background-color:var(--haze-color)">haze-color</div>
+        <div style="background-color:var(--spot-color)">spot-color</div>
+        <div style="background-color:var(--text-color)">text-color</div>
+        <div style="background-color:var(--line-color)">line-color</div>
+        <div style="background-color:var(--sign-color)">sign-color</div>
+    </div>
+    <div class="care">
+        <div style="background-color:var(--base-color)">base-color</div>
+        <div style="background-color:var(--thin-color)">thin-color</div>
+        <div style="background-color:var(--soft-color)">soft-color</div>
+        <div style="background-color:var(--haze-color)">haze-color</div>
+        <div style="background-color:var(--spot-color)">spot-color</div>
+        <div style="background-color:var(--text-color)">text-color</div>
+        <div style="background-color:var(--line-color)">line-color</div>
+        <div style="background-color:var(--sign-color)">sign-color</div>
+    </div>
+    <div class="grow">
+        <div style="background-color:var(--base-color)">base-color</div>
+        <div style="background-color:var(--thin-color)">thin-color</div>
+        <div style="background-color:var(--soft-color)">soft-color</div>
+        <div style="background-color:var(--haze-color)">haze-color</div>
+        <div style="background-color:var(--spot-color)">spot-color</div>
+        <div style="background-color:var(--text-color)">text-color</div>
+        <div style="background-color:var(--line-color)">line-color</div>
+        <div style="background-color:var(--sign-color)">sign-color</div>
+    </div>
+    <div class="keep">
+        <div style="background-color:var(--base-color)">base-color</div>
+        <div style="background-color:var(--thin-color)">thin-color</div>
+        <div style="background-color:var(--soft-color)">soft-color</div>
+        <div style="background-color:var(--haze-color)">haze-color</div>
+        <div style="background-color:var(--spot-color)">spot-color</div>
+        <div style="background-color:var(--text-color)">text-color</div>
+        <div style="background-color:var(--line-color)">line-color</div>
+        <div style="background-color:var(--sign-color)">sign-color</div>
+    </div>
+    <div class="know">
+        <div style="background-color:var(--base-color)">base-color</div>
+        <div style="background-color:var(--thin-color)">thin-color</div>
+        <div style="background-color:var(--soft-color)">soft-color</div>
+        <div style="background-color:var(--haze-color)">haze-color</div>
+        <div style="background-color:var(--spot-color)">spot-color</div>
+        <div style="background-color:var(--text-color)">text-color</div>
+        <div style="background-color:var(--line-color)">line-color</div>
+        <div style="background-color:var(--sign-color)">sign-color</div>
+    </div>
+    <div class="pick">
+        <div style="background-color:var(--base-color)">base-color</div>
+        <div style="background-color:var(--thin-color)">thin-color</div>
+        <div style="background-color:var(--soft-color)">soft-color</div>
+        <div style="background-color:var(--haze-color)">haze-color</div>
+        <div style="background-color:var(--spot-color)">spot-color</div>
+        <div style="background-color:var(--text-color)">text-color</div>
+        <div style="background-color:var(--line-color)">line-color</div>
+        <div style="background-color:var(--sign-color)">sign-color</div>
+    </div>
+    <div class="deny">
+        <div style="background-color:var(--base-color)">base-color</div>
+        <div style="background-color:var(--thin-color)">thin-color</div>
+        <div style="background-color:var(--soft-color)">soft-color</div>
+        <div style="background-color:var(--haze-color)">haze-color</div>
+        <div style="background-color:var(--spot-color)">spot-color</div>
+        <div style="background-color:var(--text-color)">text-color</div>
+        <div style="background-color:var(--line-color)">line-color</div>
+        <div style="background-color:var(--sign-color)">sign-color</div>
+    </div>
+<fieldset>
+    <hr/>
+    <div class="grid">
+        <button class="colspan-2" onclick="history.back()">Вернуться к карте</button>
+    </div>
+</fieldset>
+</section>
+
 <div id="status"></div>
+<div id="admin_controls" hidden="1">
+    <div><img src="images/1.jpg"/></div>
+    <div>Name</div>
+    <div>Age</div>
+    <div>
+        <button onclick="location.hash = `profile/${this.parentNode.parentNode.dataset.target}`">Look</button>
+        <button class="know" onclick="openExternalLink(this.parentNode.parentNode.dataset.link)">Link</button>
+    </div>
+    <div>
+        <button class="grow" onclick="acceptProfile(parseInt(this.parentNode.parentNode.dataset.target))">Accept</button>
+        <button class="deny" onclick="blockProfile(parseInt(this.parentNode.parentNode.dataset.target))">Block</button>
+    </div>
+</div>
+
+
+<div hidden="" id="alert">
+    <div>
+        <div>Эта функция будет доступна сразу после публикации приложения в каталоге.</div>
+        <div><button class="know" onclick="this.closest('#alert').hidden = true">OK</button></div>
+    </div>
+</div>
 
 
 </body>

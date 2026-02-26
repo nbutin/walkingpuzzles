@@ -10,17 +10,31 @@
 --snowy-dust: color-mix(in srgb, var(--snow) 50%, transparent);
 --snowy: color-mix(in srgb, var(--snow) 75%, transparent);
 
+
+--coaly: rgba(0, 0, 0, 0.75);
+--coaly-dust: rgba(0, 0, 0, 0.5);
+--coaly-haze: rgba(0, 0, 0, 0.25);
+--coaly-snow: rgb(128, 128, 128);
+--snowy-haze: rgba(255, 255, 255, 0.25);
+--snowy-dust: rgba(255, 255, 255, 0.5);
+--snowy: rgba(255, 255, 255, 0.75);
+--rest: rgb(153, 129, 96);
+
+
+--give: #ddaa00; /*#ffcc00; + neon, base, haze=mist 25, dust 50, spot 75, dark 25%+black, deep 50%+black, bold 75%+black */
 --care: #e78500;
 --grow: #56af3b;
 --keep: #14a17b;
 --know: #2b75ad;
 --pick: #8e4693;
 --deny: #e1241b;
+/*
 --rest: color-mix(in srgb,
     var(--care) 25%,
     color-mix(in srgb,
         var(--snow),
         var(--coal)));
+*/
 
 --warm: var(--care);
 --best: var(--grow);
@@ -42,12 +56,26 @@
 --smallest: 12px;
 }
 
+/*
 @media (prefers-color-scheme: dark) {
 :root {
 --coal: #fff;
 --snow: #000;
 }
 }
+
+@media (prefers-color-scheme: dark) {
+:root {
+--coaly: rgba(255, 255, 255, 0.75);
+--coaly-dust: rgba(255, 255, 255, 0.5);
+--coaly-haze: rgba(255, 255, 255, 0.25);
+--coaly-snow: rgb(128, 128, 128);
+--snowy-haze: rgba(0, 0, 0, 0.25);
+--snowy-dust: rgba(0, 0, 0, 0.5);
+--snowy: rgba(0, 0, 0, 0.75);
+}
+}
+*/
 
 * {
 color: inherit;
@@ -150,6 +178,11 @@ background: var(--snow);
 opacity: 0.25;
 }
 
+[data-name="profile"] input[disabled],
+[data-name="profile"] select[disabled] {
+opacity: 0.5;
+}
+
 label {
 height: 2.2em;
 border: 1px solid var(--soft-color);
@@ -215,7 +248,7 @@ a {
 }
 
 .rest, a.rest {
---base-color: var(--care);
+--base-color: var(--rest);
 }
 
 .care, a.care {
@@ -242,6 +275,197 @@ a {
 --base-color: var(--deny);
 }
 
+
+
+:root,
+.rest,
+.care,
+.grow,
+.keep,
+.know,
+.pick,
+.deny,
+a {
+--thin-color: rgb(243, 240, 236);
+--soft-color: rgb(230, 223, 215);
+--haze-color: rgba(153, 129, 96, 0.25);
+--spot-color: rgba(153, 129, 96, 0.5);
+--text-color: rgb(18, 15, 11);
+--line-color: rgb(77, 64, 48);
+--sign-color: rgb(135, 113, 84);
+}
+
+.rest, a.rest {
+--thin-color: rgb(243, 240, 236);
+--soft-color: rgb(230, 223, 215);
+--haze-color: rgba(153, 129, 96, 0.25);
+--spot-color: rgba(153, 129, 96, 0.5);
+--text-color: rgb(18, 15, 11);
+--line-color: rgb(77, 64, 48);
+--sign-color: rgb(135, 113, 84);
+}
+
+.care, a.care {
+--thin-color: rgb(252, 240, 224);
+--soft-color: rgb(249, 224, 191);
+--haze-color: rgba(231, 133, 0, 0.25);
+--spot-color: rgba(231, 133, 0, 0.5);
+--text-color: rgb(28, 16, 0);
+--line-color: rgb(115, 66, 0);
+--sign-color: rgb(203, 117, 0);
+}
+
+.grow, a.grow {
+--thin-color: rgb(235, 245, 231);
+--soft-color: rgb(213, 235, 206);
+--haze-color: rgba(86, 175, 59, 0.25);
+--spot-color: rgba(86, 175, 59, 0.5);
+--text-color: rgb(10, 21, 7);
+--line-color: rgb(43, 87, 29);
+--sign-color: rgb(76, 154, 52);
+}
+
+.keep, a.keep {
+--thin-color: rgb(227, 244, 239);
+--soft-color: rgb(196, 231, 222);
+--haze-color: rgba(20, 161, 123, 0.25);
+--spot-color: rgba(20, 161, 123, 0.5);
+--text-color: rgb(2, 19, 15);
+--line-color: rgb(10, 80, 61);
+--sign-color: rgb(18, 142, 108);
+}
+
+.know, a.know {
+--thin-color: rgb(230, 238, 245);
+--soft-color: rgb(202, 221, 235);
+--haze-color: rgba(43, 117, 173, 0.25);
+--spot-color: rgba(43, 117, 173, 0.5);
+--text-color: rgb(5, 14, 21);
+--line-color: rgb(21, 59, 87);
+--sign-color: rgb(38, 103, 152);
+}
+
+.pick, a.pick {
+--thin-color: rgb(241, 233, 242);
+--soft-color: rgb(227, 209, 228);
+--haze-color: rgba(142, 70, 147, 0.25);
+--spot-color: rgba(142, 70, 147, 0.5);
+--text-color: rgb(17, 8, 18);
+--line-color: rgb(71, 35, 73);
+--sign-color: rgb(125, 62, 129);
+}
+
+.deny, a.deny {
+--thin-color: rgb(251, 229, 228);
+--soft-color: rgb(247, 200, 198);
+--haze-color: rgba(225, 36, 27, 0.25);
+--spot-color: rgba(225, 36, 27, 0.5);
+--text-color: rgb(27, 4, 3);
+--line-color: rgb(112, 18, 14);
+--sign-color: rgb(198, 32, 24);
+}
+
+
+
+
+/*
+@media (prefers-color-scheme: dark) {
+:root,
+.rest,
+.care,
+.grow,
+.keep,
+.know,
+.pick,
+.deny,
+a {
+--thin-color: rgb(18, 15, 11);
+--soft-color: rgb(38, 32, 24);
+--haze-color: rgba(153, 129, 96, 0.25);
+--spot-color: rgba(153, 129, 96, 0.5);
+--text-color: rgb(243, 240, 236);
+--line-color: rgb(204, 192, 175);
+--sign-color: rgb(166, 144, 115);
+}
+
+.rest, a.rest {
+--thin-color: rgb(18, 15, 11);
+--soft-color: rgb(38, 32, 24);
+--haze-color: rgba(153, 129, 96, 0.25);
+--spot-color: rgba(153, 129, 96, 0.5);
+--text-color: rgb(243, 240, 236);
+--line-color: rgb(204, 192, 175);
+--sign-color: rgb(166, 144, 115);
+}
+
+.care, a.care {
+--thin-color: rgb(28, 16, 0);
+--soft-color: rgb(58, 33, 0);
+--haze-color: rgba(231, 133, 0, 0.25);
+--spot-color: rgba(231, 133, 0, 0.5);
+--text-color: rgb(252, 240, 224);
+--line-color: rgb(243, 194, 128);
+--sign-color: rgb(234, 148, 31);
+}
+
+.grow, a.grow {
+--thin-color: rgb(10, 21, 7);
+--soft-color: rgb(21, 44, 15);
+--haze-color: rgba(86, 175, 59, 0.25);
+--spot-color: rgba(86, 175, 59, 0.5);
+--text-color: rgb(235, 245, 231);
+--line-color: rgb(170, 215, 157);
+--sign-color: rgb(106, 185, 83);
+}
+
+.keep, a.keep {
+--thin-color: rgb(2, 19, 15);
+--soft-color: rgb(5, 40, 31);
+--haze-color: rgba(20, 161, 123, 0.25);
+--spot-color: rgba(20, 161, 123, 0.5);
+--text-color: rgb(227, 244, 239);
+--line-color: rgb(138, 208, 189);
+--sign-color: rgb(48, 172, 139);
+}
+
+.know, a.know {
+--thin-color: rgb(5, 14, 21);
+--soft-color: rgb(11, 29, 43);
+--haze-color: rgba(43, 117, 173, 0.25);
+--spot-color: rgba(43, 117, 173, 0.5);
+--text-color: rgb(230, 238, 245);
+--line-color: rgb(149, 186, 214);
+--sign-color: rgb(68, 134, 183);
+}
+
+.pick, a.pick {
+--thin-color: rgb(17, 8, 18);
+--soft-color: rgb(36, 18, 37);
+--haze-color: rgba(142, 70, 147, 0.25);
+--spot-color: rgba(142, 70, 147, 0.5);
+--text-color: rgb(241, 233, 242);
+--line-color: rgb(198, 163, 201);
+--sign-color: rgb(156, 92, 160);
+}
+
+.deny, a.deny {
+--thin-color: rgb(27, 4, 3);
+--soft-color: rgb(56, 9, 7);
+--haze-color: rgba(225, 36, 27, 0.25);
+--spot-color: rgba(225, 36, 27, 0.5);
+--text-color: rgb(251, 229, 228);
+--line-color: rgb(240, 145, 141);
+--sign-color: rgb(229, 62, 54);
+}
+}
+
+*/
+
+
+
+
+
+
 :not(h2, fieldset, button).rest,
 :not(h2, fieldset, button).care,
 :not(h2, fieldset, button).grow,
@@ -254,8 +478,34 @@ background-color: var(--haze-color);
 color: var(--line-color);
 }
 
+:not(:not(p, em, a:not(.badge))).rest,
+:not(:not(p, em, a:not(.badge))).care,
+:not(:not(p, em, a:not(.badge))).grow,
+:not(:not(p, em, a:not(.badge))).keep,
+:not(:not(p, em, a:not(.badge))).know,
+:not(:not(p, em, a:not(.badge))).pick,
+:not(:not(p, em, a:not(.badge))).deny,
+em {
+padding: 0 0.125rem;
+margin-left: -0.125rem;
+margin-right: -0.125rem;
+}
+
+li.rest,
+li.care,
+li.grow,
+li.keep,
+li.know,
+li.pick,
+li.deny {
+padding: 0 0.5rem;
+border-left: 1px solid var(--spot-color);
+border-right: 1px solid var(--spot-color);
+}
+
+
 button:not(.deep) {
-background: var(--spot-color);
+background-color: var(--spot-color);
 color: var(--text-color);
 }
 

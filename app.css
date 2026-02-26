@@ -89,6 +89,10 @@ border-top-left-radius: 1rem;
 border-top-right-radius: 1rem;
 }
 
+main>div:first-child {
+overflow: hidden;
+}
+
 section>*:last-child,
 main>*:last-child {
 border-bottom-left-radius: 1rem;
@@ -109,9 +113,15 @@ width: 100%;
 
 hr {
 height: 2px;
+/*
 border: 2px dashed var(--line-color);
 border-bottom: 0;
+*/
 margin: calc(1rem - 1px) calc(-1rem + 2px);
+background: transparent url(hr.svg) center;
+    background-size: auto;
+  background-size: 12px;
+  border: 0;
 }
 
 hr:first-child {
@@ -176,6 +186,10 @@ border-radius: 0.5rem;
 main .badge b {
 border: 1px solid var(--coaly-haze);
 border-radius: 0;
+/*
+background-image: var(--decor2);
+  background-size: 100%;
+*/
 }
 
 .sepia {
@@ -210,8 +224,8 @@ backdrop-filter: sepia();
 
 
 :root {
-background-image: url(bg.jpg);
-background-position: center 72px;
+background-image: url(heroes-bg.png);
+background-position: top center;
 }
 
 main>.flex {
@@ -221,17 +235,23 @@ border: 0;
 }
 
 .sJ {
---decor1: #0002;
+--decor1: #0000002f;
 }
 .sP {
---decor1: #fff3;
+--decor1: #ffffff2f;
 }
 
 .sI {
+/*
 --decor2: #fff9;
+*/
+--decor2: url(patch-w.svg);
 }
 .sE {
+/*
 --decor2: #0007;
+*/
+--decor2: url(patch-b.svg);
 }
 
 .V1 {
@@ -345,11 +365,14 @@ opacity: 1;
 main a.badge {
 width: 20%;
 border-radius: 0;
+/*
 --gradient3:
     var(--angle2),
     transparent 0px 3px,
     var(--decor1) 3px 5px,
     transparent 5px 8px;
+*/
+--gradient3: var(--angle2), transparent 0px 3px, var(--decor1) 3px 4px, transparent 4px 8px, var(--decor1) 8px 9px, transparent 9px 12px;
 --gradient2:
     var(--angle1),
     transparent,
@@ -365,22 +388,27 @@ border-radius: 0;
     var(--color2) 50%,
     var(--color2);
 background:
+    var(--decor2),
     repeating-linear-gradient(var(--gradient3)),
     repeating-linear-gradient(var(--gradient2)),
     repeating-linear-gradient(var(--gradient1));
+background-size: 100%;
+/*
 outline: 2px dashed var(--decor2);
 outline-offset: -4px;
+*/
 }
 
 main>:first-child>:first-child {
 height: calc(72px * 3 - 2rem - 2px);
 }
 main>:first-child>:nth-child(2),
-main>:first-child>:nth-child(3) {
+main>:first-child>:nth-child(3),
+main>:first-child>:nth-child(4) {
 height: calc(72px - 2rem - 2px);
 }
-main>:first-child>:nth-child(4) {
-height: calc(72px * 4 - 2rem - 2px);
+main>:first-child>:nth-child(5) {
+height: calc(72px * 5 - 2rem - 2px);
 }
 
 section:first-of-type>:first-child {
@@ -466,16 +494,16 @@ grid-column: span 2;
 grid-row: span 2;
 }
 
-input:focus-visible,
-input:focus-visible:active,
-input:active,
-select:focus,
-select:focus-visible,
-select:focus-visible:active,
-select:active,
-textarea:focus-visible,
-textarea:focus-visible:active,
-textarea:active {
+input:focus-visible:not([disabled]),
+input:focus-visible:active:not([disabled]),
+input:active:not([disabled]),
+select:focus:not([disabled]),
+select:focus-visible:not([disabled]),
+select:focus-visible:active:not([disabled]),
+select:active:not([disabled]),
+textarea:focus-visible:not([disabled]),
+textarea:focus-visible:active:not([disabled]),
+textarea:active:not([disabled]) {
 outline: 1px solid var(--line-color);
 outline-offset: -1px;
 }
@@ -491,18 +519,18 @@ input[type="radio"]:checked:active::before {
 background: var(--line-color);
 }
 
-button:focus,
-button:focus-visible,
-button:focus-visible:active,
-button:active {
+button:focus:not([disabled]),
+button:focus-visible:not([disabled]),
+button:focus-visible:active:not([disabled]),
+button:active:not([disabled]) {
 outline: 1px solid var(--coaly-haze);
 outline-offset: -3px;
 border: 1px solid var(--line-color);
 }
-button.deep:focus,
-button.deep:focus-visible,
-button.deep:focus-visible:active,
-button.deep:active {
+button.deep:focus:not([disabled]),
+button.deep:focus-visible:not([disabled]),
+button.deep:focus-visible:active:not([disabled]),
+button.deep:active:not([disabled]) {
 outline: 1px solid var(--snowy-dust);
 border: 1px solid var(--coal);
 }
@@ -561,4 +589,100 @@ grid-template-columns: 1fr calc(((100% + 2rem) / 5) - 2rem);
 
 #status {
 display: none;
+}
+
+.progressed {
+background-image: repeating-linear-gradient(90deg, var(--haze-color) 0px, var(--snow) 240px);
+animation: bg-move linear 1s infinite;
+}
+
+@keyframes bg-move {
+  0%   { background-position: 0px 0; }
+  100% { background-position: 240px 0; }
+}
+
+
+
+body:not(.mode-admin) .mode-admin,
+body:not(.mode-vk) .mode-vk,
+body:not(.mode-web) .mode-web {
+display: none;
+}
+
+
+.fullwidth {
+width: 100%;
+}
+
+
+main .grid.type-3 {
+grid-template-columns: calc(50% - 0.5rem) 1fr 33px;
+}
+
+[disabled] {cursor: not-allowed !important}
+
+.colspan-3 {
+grid-column: span 3;
+}
+.mode-admin main .grid:first-of-type .colspan-3:first-child {
+grid-column: span 2;
+}
+
+main .grid.type-3 .mode-admin [type="radio"] {
+margin: 0;
+}
+
+:not(:not([data-name="test-s"], [data-name="test-p"])) p:not(:not(.care, .grow, .keep, .know, .pick, .deny, .rest)) {
+padding: 0;
+}
+
+section > img {
+padding: 0;
+display: block;
+border: 1px solid;
+}
+
+#admin_controls {
+position: absolute;
+min-width: 120px;
+top: 100px;
+left: 100px;
+background: var(--snow);
+}
+
+#admin_controls img {
+width: 120px;
+}
+
+#admin_controls>* {
+display: block;
+}
+
+#alert {
+background: #000000bf;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  ----margin: 0px calc(-50vw + 180px);
+  ----height: 100vh;
+  ----padding: 0px calc(50vw - 180px);
+}
+
+#alert>div {
+background: white;
+padding: 1rem;
+border-radius: 1rem;
+width: 360px;
+margin: auto;
+}
+
+#alert>div :last-child {
+text-align: right;
+}
+
+#alert button {
+padding-left: 1rem;
+padding-right: 1rem;
 }

@@ -1,25 +1,42 @@
 const database_url = 'https://shorewards.ru/walkingpuzzles';
+const admins = ['92610625'];
 
+function _defaults() {
+    const obj = {};
+    obj.prop_mode = -1;
+    obj.prop_distance = 5000;
+    obj.prop_activity = 28;
+    obj.prop_age = [18, 81];
+    return obj;
+}
 
 function _reset() {
+    const defaults = _defaults();
     window.prop_version = undefined;
-    window.prop_sex = 0;
-    window.prop_mode = -1;
-    window.prop_distance = 5000;
-    window.prop_activity = 14;
-    window.prop_age = [18, 81];
-    window.prop_deleted = [0];
+    window.prop_mode = defaults.prop_mode;
+    window.prop_distance = defaults.prop_distance;
+    window.prop_activity = defaults.prop_activity;
+    window.prop_age = defaults.prop_age;
     window.prop_cached = {
-        prop_sex: 0, // 1, 2
+        prop_mode: 0,
         prop_distance: 0,
         prop_activity: 0,
         prop_age: [],
-        prop_deleted: [],
     };
-    window.prop_stored = {
-        prop_profile: [],
-    };
+    window.prop_sex = 0;
     window.prop_profile = [];
+    window.prop_deleted = [];
+    window.prop_picked = [];
+    window.prop_paid = 0;
+    window.prop_verified = 0;
+    window.prop_stored = {
+        prop_sex: 0, // 1, 2
+        prop_profile: [],
+        prop_deleted: [],
+        prop_picked: [],
+        prop_paid: 0,
+        prop_verified: 0,
+    };
     window.prop_profiles = [...characters];
 }
 
@@ -28,30 +45,55 @@ _reset();
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    window.vk_user_id = (location.search.match(/vk_user_id=(\d+)/) || [0, 0])[1];
+    document.body.classList.add('mode-web');
+    window.vk_user_id = new URLSearchParams(location.search).get('vk_user_id');
+    if (window.vk_user_id) {
+        initVk();
+    } else {
+        window.sdk = new BastyonSdk();
+        sdk.init().then((obj) => {
+            console.log('sdk initialized');
+            sdk.emit('loaded');
+        });
+        let target = document.querySelector('main label [value="3"]');
+        target.closest('label').querySelector('span').innerHTML = 'Из других соцсетей';
+        target.dataset.short = 'Из других соцсетей';
+    }
+    //~ else if (window.self !== window.top) initBastyon();
+    location.hash = 'main';
+    window.addEventListener('hashchange', embody);
+    window.prop_mode = _defaults().prop_mode;
+    appKeepProps('prop_mode');
     appLoadProps();
-    if (window.vk_user_id) initVk();
-    else if (window.self !== window.top) initBastyon();
     prepareSelectors();
     prepareControls();
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
+        .then(() => {
+            console.log('Service Worker Registered');
+        });
+    }
 });
 
 
 window.embodying_triggers = {
+    '^start$': embodyStart,
     '^main(/.*)?$': embodyMain,
     '^matching/.+$': embodyMatching,
     '^spec-p/.+$': embodySpec,
     '^profile(/.*)?$': embodyProfile,
+    '^verify$': embodyVerify,
     '^test-s/.+$': embodyTestS,
     '^test-p/.+$': embodyTestP,
+    '^palette$': embodyPalette,
 };
 
 
 function calcSocRating(type_id, selected) {
-    var profile = appGetProfileByHash(appGetSelected());
-    if (type_id < 0 || profile[1] < 0) return [-1, -1, []];
-    selected = selected || soc_types[profile[1]];
+    const profile = appGetProfileByHash(appGetSelected());
     const tested = soc_types[type_id];
+    selected = selected || soc_types[profile[1]];
+    if (!tested || !selected) return [-1, -1, []];
     var n1 = 0;
     var r = 0;
     var comment = {};
@@ -94,10 +136,10 @@ function calcSocRating(type_id, selected) {
 
 
 function calcPsyRating(type_id, selected) {
-    var profile = appGetProfileByHash(appGetSelected());
-    if (type_id < 0 || profile[2] < 0) return [-1, -1, []];
-    selected = selected || psy_types[profile[2]];
+    const profile = appGetProfileByHash(appGetSelected());
     const tested = psy_types[type_id];
+    selected = selected || psy_types[profile[2]];
+    if (!tested || !selected) return [-1, -1, []];
     var n1 = 0;
     var r = 0;
     var comment = {};
@@ -124,7 +166,7 @@ function calcPsyRating(type_id, selected) {
 }
 
 
-// ok
+// 
 function calcRating(profile) {
     const soc_rating = calcSocRating(profile[1]);
     const psy_rating = calcPsyRating(profile[2]);
@@ -150,12 +192,13 @@ function sumRating(numbers) {
 }
 
 
-// ok
+// 
 function calcAllRatings() {
     var map = [];
     const selected = appGetSelected();
+    const sex = window.prop_profile[3] || window.prop_sex;
     window.prop_profiles.forEach(p => {
-        if (p && selected != p[9] && p[3] != window.prop_sex && !window.prop_deleted.includes(p[9])) {
+        if ('45678'.includes(window.prop_mode) || p && soc_types[p[1]] && psy_types[p[2]] && selected != p[9] && p[3] != sex && !window.prop_deleted.includes(p[9])) {
             map.push(calcRating(p));
         }
     });
@@ -179,14 +222,32 @@ function appGetSelected() {
 }
 
 function applyFilter() {
-    appKeepProps();
+    let button = document.querySelector('main button');
+    button.classList.add('progressed');
+    button.disabled = true;
     if (window.prop_mode == -1) {
+        appKeepProps();
         embodyMain();
-    } else {
-        let button = document.querySelector('main button');
-        button.innerText = 'Ищем...';
-        button.disabled = true;
+    } else if ('01'.includes(window.prop_mode) && window.sdk && window.sdk.applicationInfo) {
+        find(1);
+    } else if ('01'.includes(window.prop_mode)) {
         find();
+    } else if (window.prop_mode == 2) {
+        fetchPicked();
+    } else if (window.prop_mode == 3 && !window.vk_user_id) {
+        find();
+    } else if (window.prop_mode == 3) {
+        fetchFriends();
+    } else if (window.prop_mode == 4) {
+        fetchNews();
+    } else if (window.prop_mode == 5) {
+        fetchPaid();
+    } else if (window.prop_mode == 6) {
+        fetchAutoverified();
+    } else if (window.prop_mode == 7) {
+        fetchEdited();
+    } else if (window.prop_mode == 8) {
+        fetchNoticed();
     }
 }
 
@@ -197,21 +258,26 @@ function selectMode() {
     window.prop_mode = parseInt(node.value);
     main.querySelector('div').setAttribute('class', node.dataset.color);
     main.querySelectorAll('input[type="text"]').forEach(i => {
-        if (node.value == '-1') {
-            i.disabled = true;
-            main.querySelector('button').innerText = 'Применить';
-        } else {
+        if ('01'.includes(node.value) || node.value == '-1--') {
             i.disabled = false;
-            main.querySelector('button').innerText = 'Найти';
+        } else {
+            i.disabled = true;
         }
     });
 }
 
+
+// ok
 function formatNumbers() {
     const node = event.target;
+    const age = (new Date().getFullYear() - window.prop_profile[6]) || 99;
+    const min_age = Math.min(age, 18);
+    if (age < 18) max_age = 17
+    else max_age = 81
     var numbers = node.value.match(/\d+/g);
     if (node.name == 'prop_age') {
-        numbers = (numbers || []).filter(i => parseInt(i) > 17);
+        numbers = (numbers || []).map(i => (parseInt(i) >= min_age && parseInt(i)) || min_age);
+        numbers = (numbers || []).map(i => (parseInt(i) <= max_age && parseInt(i)) || max_age);
         if (numbers.length) {
             if (numbers.length > 1) {
                 window[node.name] = numbers.slice(0, 2).sort((a, b) => a - b);
@@ -219,16 +285,50 @@ function formatNumbers() {
                 window[node.name] = [numbers[0], numbers[0]];
             }
         }
-    } else {
+    } else if (node.name == 'prop_activity') {
         if (numbers) {
-            window[node.name] = parseInt(numbers[0]);
+            if (numbers[0] < 1) window[node.name] = 1;
+            else if (numbers[0] > 5432) window[node.name] = 5432;
+            else window[node.name] = parseInt(numbers[0]);
+        }
+    } else if (node.name == 'prop_distance') {
+        if (numbers) {
+            if (numbers[0] < 100) window[node.name] = 100;
+            else if (numbers[0] > 20000) window[node.name] = 20000;
+            else window[node.name] = parseInt(numbers[0]);
         }
     }
     node.value = eval(node.dataset.format);
 }
 
-// ok
+// 
+function embodyStart() {
+    if (window.prop_profile[9] !== undefined && window.prop_sex) goHome();
+}
+
+function srbg2rgb(str) {
+    //~ color(srgb 0.882353 0.141176 0.105882 / 0.25)
+    var replaced = [];
+    (str.match(/\d\.?\d*/g) || []).slice(0, 3).forEach((v, i) => {
+        replaced[i] = Math.round(v * 255);
+    });
+    if (str.includes('/')) str = str.replace(/color\(srgb [\d\.\s]+/, `rgba(${replaced.join(', ')}`).replace('/', ',');
+    else str = str.replace(/color\(srgb [\d\.\s]+/, `rgb(${replaced.join(', ')}`);
+    console.log(str, replaced);
+    return str;
+}
+
+
+function embodyPalette() {
+    document.querySelectorAll('[data-name="palette"]>div>div').forEach(node => {
+        node.innerText = `--${node.innerText}: ${srbg2rgb(window.getComputedStyle(node).background)};`;
+    });
+}
+
+
+// 
 function embodyMain() {
+    appLoadProps();
     if (!window.prop_sex) {
         location.hash = 'start';
         return;
@@ -236,20 +336,24 @@ function embodyMain() {
     var radio_buttons = document.querySelectorAll('main input[type="radio"]');
     radio_buttons.forEach(node => {
         node.checked = false;
-        if (!node.onchange) {
-            node.onchange = selectMode;
-        }
+        node.setAttribute('onchange', 'selectMode(event)');
+        //~ if (!node.onchange) {
+            //~ node.onchange = selectMode;
+        //~ }
     });
+    let button = document.querySelector('main button');
+    button.classList.remove('progressed');
+    button.disabled = false;
     document.querySelector(`main input[value="${window.prop_mode}"]`).click();
-    document.querySelector('main button').disabled = false;
     document.querySelectorAll('main input[type="text"]').forEach((node, i) => {
-        if (!node.onchange) {
-            node.onchange = formatNumbers;
-            if (i == 0) node.value = window.prop_distance;
-            else if (i == 1) node.value = window.prop_activity;
-            else node.value = window.prop_age;
-            node.dispatchEvent(new Event('change'));
-        }
+        node.setAttribute('onchange', 'formatNumbers(event)');
+        //~ if (!node.onchange) {
+            //~ node.onchange = formatNumbers;
+        //~ }
+        if (i == 0) node.value = window.prop_distance;
+        else if (i == 1) node.value = window.prop_activity;
+        else node.value = window.prop_age;
+        node.dispatchEvent(new Event('change'));
     });
     if (appGetSelected() >= 0 && window.prop_mode == -1) {
         window.prop_profiles = [window.prop_profile, ...characters.slice(1)];
@@ -260,7 +364,7 @@ function embodyMain() {
         window.prop_profiles = [...characters];
         var first = calcRating(window.prop_profiles[Math.abs(appGetSelected())]);
     }
-    let hint = document.querySelector('main>div.hint.deny');
+    let hint = document.querySelector('main>div.hint.care');
     hint.hidden = window.prop_profiles.length > 48 && true || false;
     var items = [first, ...calcAllRatings()];
     items = items;
@@ -271,16 +375,22 @@ function embodyMain() {
     });
     if (window.prop_profile[9] === undefined) {
         alt_blocks[0].hidden = false;
-    } else if (window.prop_mode == -1){
+    } else if (window.prop_mode == -1) {
         alt_blocks[1].hidden = false;
-    } else {
+    } else if ('01'.includes(window.prop_mode)){
         alt_blocks[2].hidden = false;
-        let fields = alt_blocks[2].querySelectorAll('i');
-        let short = alt_blocks[3].querySelector(`[value="${window.prop_mode}"]`).dataset.short;
+        let fields = alt_blocks[2].querySelectorAll('em, i');
+        let short = alt_blocks[4].querySelector(`[value="${window.prop_mode}"]`).dataset.short;
         fields[0].innerText = `${short}`;
         fields[1].innerText = `${window.prop_age[0]}-${window.prop_age[1]}`;
         fields[2].innerText = `${window.prop_distance}`;
         fields[3].innerText = `${window.prop_activity}`;
+    } else /*if (window.prop_mode >= 2)*/{
+        alt_blocks[3].hidden = false;
+        let fields = alt_blocks[3].querySelectorAll('em');
+        let short = alt_blocks[4].querySelector(`[value="${window.prop_mode}"]`).dataset.short;
+        fields[0].innerText = `${short}`;
+        //~ alt_blocks[window.prop_mode + 1].hidden = false;
     }
     const translate = {
         anon: 'none',
@@ -327,6 +437,24 @@ function embodyMain() {
         html += htmlBadge(image, label, onclick, class_a, class_b);
     });
     document.getElementById('map').innerHTML = html;
+    const ctl = document.getElementById('admin_controls');
+    ctl.hidden = true;
+    if (window.prop_mode > 3) {
+        document.querySelectorAll('#map .badge').forEach(node => {
+            node.addEventListener('mouseover', (event) => {
+                let profile = appGetProfileByHash(parseInt(event.target.parentNode.outerHTML.split('/')[1]));
+                ctl.hidden = false;
+                ctl.style.left = `calc(${event.pageX}px - ((100vw - 360px) / 2) - 8px)`;
+                ctl.style.top = `calc(${event.pageY}px - 72px - 8px)`;
+                ctl.dataset.target = profile[9];
+                ctl.dataset.link = profile[5];
+                let controls = ctl.querySelectorAll('*');
+                controls[1].src = profile[10];
+                controls[2].innerText = profile[0];
+                controls[3].innerText = `${profile[3] == 1 && 'Мужчина' || 'Женщина'}, ${fromYearToAge(profile[6])}`;
+            });
+        });
+    }
     fixLayout();
 }
 
@@ -382,7 +510,7 @@ function percentToClass(n1, n2) {
 function getColorMark(text) {
     var result = '';
     Object.entries(marks).some(i => {
-        if (i[1].includes(text.split(' ')[0])) {
+        if (i[1].includes(text.split(' по&')[0] + ',')) {
             result = i[0];
             return true;
         }
@@ -395,7 +523,8 @@ function getColorMark(text) {
 function formatRatingDetails(items) {
     var html = '';
     items.forEach(i => {
-        html += `<li class="${getColorMark(i)}">✔ ${i.replace(' и ', ' и&nbsp;')},</li>`;
+        //~ html += `<li class="${getColorMark(i)}">✔ ${i.replace(' и ', ' и&nbsp;')},</li>`;
+        html += `<li class="${getColorMark(i)}">${i.replace(' и ', ' и&nbsp;')},</li>`;
     });
     return html && html.slice(0, -6) + '.</li>' || '';
 }
@@ -405,11 +534,14 @@ function correctVerifyHeader(header, status) {
     if (status === undefined || status == -1) {
         header.innerText = 'Персонаж';
         header.className = 'care';
-    } else if (status) {
+    } else if (status == 1) {
         header.innerHTML = `<a onclick="location.hash = 'verify'" style="background:inherit; color:inherit">Профиль прошёл проверку</a>`;
         header.className = 'grow';
+    } else if (status == 2) {
+        header.innerHTML = `<a onclick="location.hash = 'verify'" style="background:inherit; color:inherit">Профиль автоверифицирован</a>`;
+        header.className = 'keep';
     } else {
-        header.innerHTML = `<a onclick="location.hash = 'verify'" style="background:inherit; color:inherit">Непроверенный профиль</a>`;
+        header.innerHTML = `<a onclick="location.hash = 'verify'" style="background:inherit; color:inherit">Профиль не верифицирован</a>`;
         header.className = 'deny';
     }
 }
@@ -419,6 +551,11 @@ function correctVerifyHeader(header, status) {
 function embodyMatching() {
     const id1 = appGetSelected();
     const selected = appGetProfileByHash(id1);
+    if (id1 == window.prop_profile[9]) {
+        var left_button = 'Исправить';
+    } else {
+        var left_button = 'В профиль';
+    }
     const matched = appGetProfileByHash();
     const id2 = matched[9];
     const header = document.querySelector('[data-name="matching"] h2');
@@ -465,8 +602,8 @@ function embodyMatching() {
         <ul id="psy-details" class="colspan-2">
                     ${psy_details}
                 </ul>
-        <button onclick="location.hash = '${link1e}'">Исправить</button>
-        ${profile_button}
+        <button onclick="location.hash = '${link1e}'">${left_button}</button>
+        <button onclick="location.hash = '${link2e}'">В профиль</button>
     `;
     document.querySelector('#matching .grid').innerHTML = html;
     fixLayout();
@@ -484,7 +621,7 @@ function embodySpec(type_id) {
 }
 
 
-// ok
+// 
 function appGetProfileByHash(profile_id) {
     if (profile_id === undefined) {
         profile_id = parseInt(location.hash.split('/').slice(-1)[0] || window.prop_profile[9] || 0);
@@ -510,7 +647,7 @@ function appGetProfileByHash(profile_id) {
 }
 
 
-// ok
+// 
 function fromCacheOrProfile(index) {
     const profile = appGetProfileByHash();
     const cached = appCachedProfileValue(index);
@@ -526,7 +663,7 @@ function fromCacheOrProfile(index) {
 }
 
 
-// ok
+// 
 function appCachedProfileValue(i, value) {
     if (!window._cached_ || [undefined].includes(i)) {
         window._cached_ = [];
@@ -557,14 +694,54 @@ function loadProfileInfo(profile) {
                 appCachedProfileValue(5, url);
                 section.querySelector('[name="name"]').value = appCachedProfileValue(0) || name;
                 section.querySelector('.badge i').style.backgroundImage = `url("${data.photo_200}")`;
-                section.querySelector('[name="link"]').value = url;
+                let link_control = section.querySelector('[name="link"]');
+                link_control.setAttribute('onclick', `openExternalLink('${url}')`);
+                link_control.value = 'Страница в социальной сети';
+            }
+        });
+    } else if (sdk.applicationInfo) {
+        sdk.permissions.request(['account'])
+        .then(granted => {
+            if (granted) {
+                sdk.get.account()
+                .then(account => {
+                    console.log('>>> account: ', account);
+                    if ('address' in account) {
+                        let url = `https://bastyon.com/${account.address}`;
+                        appCachedProfileValue(12, account.signature);
+                        sdk.rpc('getuserprofile', [[account.address]], {})
+                        .then(profile => {
+                            console.log('>>> profile: ', profile);
+                            //~ profile = profile[0];
+                            let name = profile[0].name;
+                            appCachedProfileValue(10, profile[0].i);
+                            appCachedProfileValue(0, appCachedProfileValue(0) || name);
+                            appCachedProfileValue(5, url);
+                            section.querySelector('[name="name"]').value = appCachedProfileValue(0) || name;
+                            section.querySelector('.badge i').style.backgroundImage = `url("${profile[0].i}")`;
+                            let link_control = section.querySelector('[name="link"]');
+                            link_control.setAttribute('onclick', `openExternalLink('${url}')`);
+                            link_control.value = 'Страница в социальной сети';
+                        })
+                    }
+                });
             }
         });
     }
 }
 
 
-// 
+function fromYearToAge(year) {
+    const num = `${new Date().getFullYear() - year}`;
+    var txt = 'лет';
+    if (num.slice(-2, -1) != '1') {
+        if (num.slice(-1) == '1') txt = 'год';
+        else if ('234'.includes(num.slice(-1))) txt = 'года';
+    }
+    return `${num} ${txt}`;
+}
+
+// ok
 function embodyProfile() {
     if (core_history_of_embodyings[1].slice(0, 5) != 'test-') {
         appCachedProfileValue();
@@ -573,8 +750,14 @@ function embodyProfile() {
     const section = document.querySelector('[data-name="profile"]');
     const header = section.querySelector('h2');
     correctVerifyHeader(header, profile[4]);
-    section.querySelectorAll('.hint>div').forEach(h => {
-        h.innerHTML = '';
+    if (profile[9] == window.prop_profile[9]) checkStatus();
+    if (profile[9] == window.prop_profile[9] && window.prop_paid && !window.prop_verified) {
+        document.getElementById('paid').hidden = false;
+    } else {
+        document.getElementById('paid').hidden = true;
+    }
+    section.querySelectorAll('.hint>div').forEach((h, i) => {
+        if (i < 2) h.innerHTML = '';
         h.parentNode.hidden = true;
     });
     const inputs = section.querySelectorAll('input, select');
@@ -583,10 +766,27 @@ function embodyProfile() {
     if (profile[9] == window.prop_profile[9]) {
         loadProfileInfo(profile);
         section.querySelector('[data-part="additional"]').hidden = false;
-        header.innerText = 'Мой профиль';
-        header.className = '';
+        section.querySelector('[data-part="additional"] p').hidden = false;
+        if (!profile[9]) {
+            header.innerText = 'Мой профиль';
+            header.className = '';
+        }
         inputs.forEach(i => {
-            i.disabled = false;
+            if (['location', 'year'].includes(i.name)) {
+                i.classList.remove('link');
+                i.removeAttribute('onfocus');
+                i.removeAttribute('onclick');
+            } else if (i.name == 'link'){
+                if (profile[5]) {
+                    i.setAttribute('onclick', `openExternalLink('${fromCacheOrProfile(5)}')`);
+                    i.value = 'Страница в социальной сети';
+                } else {
+                    i.removeAttribute('onclick');
+                    i.value = '';
+                }
+            } else {
+                i.disabled = false;
+            }
         });
     } else {
         if (profile[9] < 0) {
@@ -596,7 +796,22 @@ function embodyProfile() {
             section.querySelector('[data-part="additional"] p').hidden = true;
         }
         inputs.forEach(i => {
-            i.disabled = true;
+            if (profile[9] > 0 && ['link', 'location', 'year'].includes(i.name)) {
+                i.setAttribute('onfocus', 'this.blur()');
+                if (i.name == 'location') {
+                    i.classList.add('link');
+                    i.setAttribute('onclick', `openExternalLink('https://yandex.ru/maps/?ll=${profile[8]}%2C${profile[7]}&z=7')`);
+                    i.value = `Меньше ${maxDistanceFromMe(profile[7], profile[8])} км`;
+                } else if (i.name == 'link') {
+                    i.classList.add('link');
+                    i.setAttribute('onclick', `openExternalLink('${fromCacheOrProfile(5)}')`);
+                    i.value = 'Страница в социальной сети';
+                } else if (i.name == 'year') {
+                    i.value = fromYearToAge(fromCacheOrProfile(6));
+                }
+            } else if (!['link', 'location', 'year'].includes(i.name)) {
+                i.disabled = true;
+            }
         });
     }
     const [
@@ -610,22 +825,44 @@ function embodyProfile() {
         ] = inputs;
     input_name.value = fromCacheOrProfile(0);
     changedProfile(0, input_name);
-    image.innerHTML = htmlBadge(fromCacheOrProfile(10), input_name.value);
-    const lat = fromCacheOrProfile(7);
-    const lon = fromCacheOrProfile(8);
-    input_link.value = fromCacheOrProfile(5) || '';
-    appCachedProfileValue(profile_map.indexOf('link'), fromCacheOrProfile(5) || '');
-    input_location.value = lat && lon && `${lat.toFixed(3)}, ${lon.toFixed(3)}` || '';
-    appCachedProfileValue(profile_map.indexOf('lat'), lat);
-    appCachedProfileValue(profile_map.indexOf('lon'), lon);
-    input_year.value = fromCacheOrProfile(6) || '';
-    appCachedProfileValue(profile_map.indexOf('year'), fromCacheOrProfile(6) || '');
+    if (profile[9] > 0) {
+        image.innerHTML = htmlBadge(fromCacheOrProfile(10), input_name.value, "openExternalLink(fromCacheOrProfile(5))");
+    } else {
+        image.innerHTML = htmlBadge(fromCacheOrProfile(10), input_name.value);
+    }
+    if (!profile[9] || profile[9] >= 0) {
+        const lat = fromCacheOrProfile(7);
+        const lon = fromCacheOrProfile(8);
+        if (profile[9] == window.prop_profile[9]) {
+            input_link.value = fromCacheOrProfile(5) || '';
+            input_location.value = lat && lon && `${lat.toFixed(3)}, ${lon.toFixed(3)}` || '';
+            input_year.value = fromCacheOrProfile(6) || '';
+        }
+        appCachedProfileValue(profile_map.indexOf('link'), fromCacheOrProfile(5) || '');
+        appCachedProfileValue(profile_map.indexOf('lat'), lat);
+        appCachedProfileValue(profile_map.indexOf('lon'), lon);
+        appCachedProfileValue(profile_map.indexOf('year'), fromCacheOrProfile(6) || '');
+    }
     soc_selector.value = `${fromCacheOrProfile(1)}` || -1;
     changedProfile(0, soc_selector);
     psy_selector.value = `${fromCacheOrProfile(2)}` || -1;
-    setTimeout(() => {changedProfile(0, psy_selector)}, 9); ////////////////////////// why???
+    setTimeout(() => {changedProfile(0, psy_selector)}, 9);
     appCachedProfileValue(3, fromCacheOrProfile(3) || window.prop_sex);
     sex_selector.value = appCachedProfileValue(3);
+    fixLayout();
+}
+
+
+// ok
+function embodyVerify() {
+    var buttons = document.querySelectorAll('[data-name="verify"] button');
+    if (window.prop_paid || window.prop_verified) {
+        buttons[0].hidden = true;
+        buttons[1].hidden = true;
+    } else {
+        buttons[0].hidden = false;
+        buttons[1].hidden = false;
+    }
     fixLayout();
 }
 
@@ -670,17 +907,24 @@ function isChanged() {
 // ok
 function isComplete() {
     const profile = appGetProfileByHash();
-    var result = true;
-    for (let i = 0; i < 9; i++) {
-        if (![4, 5].includes(i)) {
-            if ([1, 2].includes(i) && (!window._cached_ || parseInt(window._cached_[i]) < 0)) {
-                result = false;
-            } else if (![1, 2].includes(i) && (!window._cached_ || !window._cached_[i])) {
-                result = false;
-            }
-        }
-    }
-    return result;
+    if (!window._cached_[0] || !window._cached_[3] || !window._cached_[7] || !window._cached_[8]) return false;
+    else if (parseInt(window._cached_[1]) < 0) return false;
+    else if (parseInt(window._cached_[2]) < 0) return false;
+    else if (`${window._cached_[6]}`.length != 4) return false;
+    else return true;
+    //~ var result = true;
+    //~ for (let i = 0; i < 9; i++) {
+        //~ if (![4, 5].includes(i)) {
+            //~ if ([1, 2].includes(i) && (!window._cached_ || parseInt(window._cached_[i]) < 0)) {
+                //~ result = false;
+            //~ } else if (i == 6 && (!window._cached_ || !window._cached_[i] || `${window._cached_[i]}`.length != 4)) {
+                //~ result = false;
+            //~ } else if (![1, 2].includes(i) && (!window._cached_ || !window._cached_[i])) {
+                //~ result = false;
+            //~ }
+        //~ }
+    //~ }
+    //~ return result;
 }
 
 function prepareControls() {
@@ -691,24 +935,101 @@ function prepareControls() {
     document.querySelectorAll('[data-name="profile"] input').forEach(c => {
         c.addEventListener('keyup', changedProfile);
         c.addEventListener('change', changedProfile);
+        //~ c.addEventListener('blur', changedProfile);
     });
 }
 
 
-// 
+// ok
 function changedProfile(event, target) {
     name = event && event.target.name || target.name;
     value = event && event.target.value || !event && target.value || '';
     const profile = appGetProfileByHash();
     const section = document.querySelector('[data-name="profile"]');
-    const button = section.querySelector('button');
+    const [pick_button, button] = section.querySelectorAll('button');
     if (['test-s', 'test-p'].includes(name) && value == 'test') {
         location.hash = `${name}/${profile[9]}`;
         return;
     } else {
         appCachedProfileValue(profile_map.indexOf(name), value);
     }
+    pick_button.hidden = true;
     setTimeout(() => {
+        const hints = section.querySelectorAll('.hint>div');
+        if (name == 'name') {
+            let input_name = section.querySelector('input[name="name"]');
+            input_name.value = value.replaceAll(/[<>]|^\s+$/g, '');
+            let image = section.querySelector('#badge-place');
+            if (profile[9] > 0) {
+                image.innerHTML = htmlBadge(fromCacheOrProfile(10), input_name.value, "openExternalLink(fromCacheOrProfile(5))");
+            } else {
+                image.innerHTML = htmlBadge(fromCacheOrProfile(10), input_name.value);
+            }
+        } else if (name == 'year') {
+            let input_year = section.querySelector('input[name="year"]');
+            let raw = `${Math.abs(parseInt(input_year.value))}`;
+            let val = '';
+            let this_year = new Date().getFullYear();
+            while (raw && !val) {
+                for (let i=this_year-99; i<this_year-13; i++) {
+                    if (raw == `${i}`.slice(0, raw.length)) {
+                        val = raw;
+                        break;
+                    }
+                }
+                raw = raw.slice(0, -1);
+            }
+            if (document.activeElement.name != name && val.length < 4) {
+                val = '';
+            }
+            input_year.value = val;
+            appCachedProfileValue(6, parseInt(val));
+        } else if (name == 'location') {
+            let input_location = section.querySelector('input[name="location"]');
+            let [raw_lat, raw_lon] = (input_location.value.match(/-?\d+\.?\d*/g) || []);
+            let lat = raw_lat && parseFloat(raw_lat);
+            let lon = raw_lon && parseFloat(raw_lon);
+            if (lat != undefined && lat >= -90 && lat <= 90
+                && lon != undefined && lon >= -180 && lon <= 180) {
+                appCachedProfileValue(profile_map.indexOf('lat'), lat.toFixed(3));
+                appCachedProfileValue(profile_map.indexOf('lon'), lon.toFixed(3));
+                //~ if (lat == raw_lat) lat = raw_lat;
+                //~ if (lon == raw_lon) lon = raw_lon;
+                if (document.activeElement.name != name) {
+                    input_location.value = `${parseFloat(raw_lat).toFixed(3)}, ${parseFloat(raw_lon).toFixed(3)}`;
+                } else {
+                    input_location.value = `${raw_lat}, ${raw_lon}`;
+                }
+            } else if (document.activeElement.name != name) {
+                input_location.value = '';
+                appCachedProfileValue(7, null);
+                appCachedProfileValue(8, null);
+            } else {
+                appCachedProfileValue(7, null);
+                appCachedProfileValue(8, null);
+            }
+        } else if (name.split('-').slice(-1)[0] == 's') {
+            if (parseInt(value) >= 0) {
+                hints[0].innerHTML = document.querySelector(`[data-name="spec-s/${value}"]`).innerHTML;
+                hints[0].parentNode.hidden = false;
+                if (profile[9] == window.prop_profile[9]) hints[2].parentNode.hidden = false;
+            } else {
+                hints[0].innerHTML = '';
+                hints[0].parentNode.hidden = true;
+                if (!(parseInt(section.querySelector('[name="test-p"]').value) >= 0)) hints[2].parentNode.hidden = true;
+            }
+        } else if (name.split('-').slice(-1)[0] == 'p') {
+            if (parseInt(value) >= 0) {
+                embodySpec(value);
+                hints[1].innerHTML = document.querySelector('[data-name="spec-p"] div').innerHTML;
+                hints[1].parentNode.hidden = false;
+                if (profile[9] == window.prop_profile[9]) hints[2].parentNode.hidden = false;
+            } else {
+                hints[1].innerHTML = '';
+                hints[1].parentNode.hidden = true;
+                if (!(parseInt(section.querySelector('[name="test-s"]').value) >= 0)) hints[2].parentNode.hidden = true;
+            }
+        }
         if (profile[9] < 0) {
             button.innerText = 'Удалить';
             button.className = 'deny';
@@ -717,6 +1038,10 @@ function changedProfile(event, target) {
             button.innerText = 'Удалить';
             button.className = 'deny';
             button.disabled = false;
+            if (profile[9] != window.prop_profile[9]) {
+                pick_button.hidden = false;
+                switchPickOrReleaseButton(pick_button, window.prop_picked.includes(profile[9]));
+            }
         } else if (profile[0] && !appCachedProfileValue(0)) {
             button.innerText = 'Удалить';
             button.className = 'deny';
@@ -729,54 +1054,6 @@ function changedProfile(event, target) {
             button.innerText = 'Сохранить';
             button.className = 'grow';
             button.disabled = true;
-        }
-        const hints = section.querySelectorAll('.hint>div');
-        if (name == 'name') {
-            let input_name = section.querySelector('input[name="name"]');
-            input_name.value = value.replaceAll(/[<>]|^\s+$/g, '');
-            let image = section.querySelector('#badge-place');
-            image.innerHTML = htmlBadge(profile[10], value);
-        } else if (name == 'sex') {
-            window.prop_sex = parseInt(value);
-            appKeepProps('prop_sex');
-        } else if (name == 'year') {
-            let input_year = section.querySelector('input[name="year"]');
-            let val = Math.abs(parseInt(input_year.value));
-            if (!val) {
-                input_year.value = '';
-            } else if (val != input_year.value) {
-                input_year.value = val;
-            }
-        } else if (name == 'location') {
-            let input_location = section.querySelector('input[name="location"]');
-            let [lat, lon] = input_location.value.matchAll(/-?\d+\.\d+/g).toArray();
-            lat = lat && parseFloat(lat[0]).toFixed(3);
-            lon = lon && parseFloat(lon[0]).toFixed(3);
-            if (lat != undefined && lon != undefined) {
-                appCachedProfileValue(profile_map.indexOf('lat'), lat);
-                appCachedProfileValue(profile_map.indexOf('lon'), lon);
-                input_location.value = `${lat}, ${lon}`;
-            } else {
-                input_location.value = '';
-            }
-            //~ input_name.value = value.replaceAll(/[<>]|^\s+$/g, '');
-        } else if (name.split('-').slice(-1)[0] == 's') {
-            if (parseInt(value) >= 0) {
-                hints[0].innerHTML = document.querySelector(`[data-name="spec-s/${value}"]`).innerHTML;
-                hints[0].parentNode.hidden = false;
-            } else {
-                hints[0].innerHTML = '';
-                hints[0].parentNode.hidden = true;
-            }
-        } else if (name.split('-').slice(-1)[0] == 'p') {
-            if (parseInt(value) >= 0) {
-                embodySpec(value);
-                hints[1].innerHTML = document.querySelector('[data-name="spec-p"] div').innerHTML;
-                hints[1].parentNode.hidden = false;
-            } else {
-                hints[1].innerHTML = '';
-                hints[1].parentNode.hidden = true;
-            }
         }
         if (['test-s', 'test-p'].includes(name)) {
             fixLayout();
@@ -852,7 +1129,7 @@ function changedProfile(event, target) {
 
 
 function goHome() {
-    if (location.hash == '#main' && window.prop_profile[9] === undefined) {
+    if (!window.prop_sex) {
         location.hash = 'start';
     } else {
         location.hash = 'main';
@@ -865,9 +1142,8 @@ function embodyTestS() {
     document.querySelector('[data-name="test-s"] button:first-of-type').disabled = true;
     document.querySelectorAll('[data-name="test-s"] input[type="radio"]').forEach(node => {
         node.checked = false;
-        if (!node.onchange) {
-            node.onchange = checkTestS;
-        }
+        node.removeEventListener('change', checkTestS);
+        node.addEventListener('change', checkTestS);
     });
 }
 
@@ -901,9 +1177,8 @@ function embodyTestP() {
     section.querySelectorAll('input[type="radio"]').forEach(node => {
         node.checked = false;
         node.removeAttribute('data-checked');
-        if (!node.onchange) {
-            node.onchange = checkTestP;
-        }
+        node.removeEventListener('change', checkTestP);
+        node.addEventListener('change', checkTestP);
     });
     section.querySelectorAll('.step2').forEach(node => {
         node.hidden = true;
@@ -940,13 +1215,13 @@ function checkTestP(step) {
                     node.checked = false;
                     node.removeAttribute('data-checked');
                     node.name = '13';
-                    node.onchange = checkTestP;
+                    node.setAttribute('onchange', 'checkTestP(event)');
                 });
                 form3.querySelectorAll('input').forEach(node => {
                     node.checked = false;
                     node.removeAttribute('data-checked');
                     node.name = '24';
-                    node.onchange = checkTestP;
+                    node.setAttribute('onchange', 'checkTestP(event)');
                 });
             });
         });
@@ -994,20 +1269,20 @@ function visit(name) {
     var map = {
         'default': 'https://bastyon.com/sdrawerohs',
         'hobbystu': 'https://vk.com/hobbystu',
-        'featured': 'https://vk.com/shorewards?w=wall-117170606_352',
-        'lexigo': 'https://bastyon.com/application?id=lexigo.app',
-        'pogodavdometer': 'https://bastyon.com/application?id=pogodavdometer.app',
-        'lifetuner': 'https://bastyon.com/application?id=lifetuner.app',
+        'featured': 'https://bastyon.com/index?video=1&v=49856f48491e9befd89252d3edda8a420d5eccab75731ed75dd6a782e33a3cd7',
+        'lexigo': 'https://bastyon.com/index?video=1&v=fce8ddc8700a00693ee602e41cd768e7549aad59dacd7dad213e23a9af362c84',
+        'pogodavdometer': 'https://bastyon.com/index?v=888d76fcbe1e28cc25b412d46344fd49e6c69c013743f14f1a52ef066d60bbf2&video=1&ref=PHN3UprgHjMPQsiXkqEju9bAqCmD73H6B9',
+        'lifetuner': 'https://bastyon.com/post?s=af2e4950af5286ef411949b350ea7d40aa62f3036dca6559f19f1136f5fce659&ref=PHN3UprgHjMPQsiXkqEju9bAqCmD73H6B9',
     }
     var vk_map = {
         'default': 'https://vk.com/shorewards',
         'hobbystu': 'https://vk.com/hobbystu',
-        'featured': 'https://vk.com/shorewards?w=wall-117170606_352',
-        'lexigo': 'https://vk.com/lexigo2',
+        'featured': 'https://vk.com/shorewards?w=wall-117170606_354',
+        'lexigo': 'https://vk.com/app54185696',
         'pogodavdometer': 'https://vk.com/pogodavdometer',
         'lifetuner': 'https://vk.com/progressinator',
     }
-    openExternalLink((window.vk_user_id && vk_map || map)[name || 'default']);
+    openExternalLink((window.vk_user_id && vk_map || map)[name || 'default'] || name);
 }
 
 
@@ -1066,18 +1341,19 @@ function visit(name) {
 
 function start(sex) {
     window.prop_sex = sex;
-    appKeepProps('prop_sex');
+    appSaveProps('prop_sex');
     location.hash = 'main';
 }
 
 
-function find() {
+function find(exclude_vk) {
     const [stype, ptype, sex, x, y, year, lat, lon, id] = window.prop_profile.slice(1);
     const from_year = new Date().getFullYear() - window.prop_age[1];
     const to_year = new Date().getFullYear() - window.prop_age[0];
-    const is_verified = window.prop_mode;
+    const is_verified = window.prop_mode == 1 && 1 || 0;
+    const deleted = window.prop_deleted.length && window.prop_deleted || [0];
     const delta = window.prop_distance / 100;
-    fetch(`${database_url}/find/${stype}/${ptype}/${sex}/${window.prop_activity}/${from_year}/${to_year}/${parseFloat(lat - delta).toFixed(3)}/${parseFloat(lat + delta).toFixed(3)}/${parseFloat(lon - delta).toFixed(3)}/${parseFloat(lon + delta).toFixed(3)}/${is_verified}/${window.prop_deleted}/${id}`)
+    fetch(`${database_url}/find/${stype}/${ptype}/${sex}/${window.prop_activity}/${from_year}/${to_year}/${parseFloat(lat - delta).toFixed(3)}/${parseFloat(lat + delta).toFixed(3)}/${parseFloat(lon - delta).toFixed(3)}/${parseFloat(lon + delta).toFixed(3)}/${is_verified}/${deleted}/${id}/${exclude_vk && 1 || 0}`)
     .then(resp => {
         if (!resp.ok) {
             throw new Error('Finding operation failed');
@@ -1087,32 +1363,139 @@ function find() {
     .then(data => {
         console.log('Found:', data);
         window.prop_profiles = [window.prop_profile, ...data];
+        appKeepProps();
         embodyMain();
     })
     .catch(error => {
         console.error('Error:', error);
+        let button = document.querySelector('main button');
+        button.classList.remove('progressed');
+        button.disabled = false;
     });
+    //~ .finally(() => {
+        //~ let button = document.querySelector('main button');
+        //~ button.classList.remove('progressed');
+        //~ button.disabled = false;
+    //~ });
+}
+
+function checkStatus() {
+    fetchPicked([window.prop_profile[9]], (data) => {
+        if (data[0][4] && data[0][4] != window.prop_profile[4]) {
+            window.prop_profile[4] = data[0][4];
+            window.prop_verified = 1;
+            window.prop_paid = 0;
+            appSaveProps();
+            embody();
+        }
+    });
+}
+
+
+function fetchPicked(list, callback) {
+    const picked = list || window.prop_picked.length && window.prop_picked || [0];
+    fetch(`${database_url}/pick/${picked}`)
+    .then(resp => {
+        if (!resp.ok) {
+            throw new Error('Fetching operation failed');
+        }
+        return resp.json();
+    })
+    .then(data => {
+        console.log('Fetched:', data);
+        if (!list) {
+            window.prop_profiles = [window.prop_profile, ...data];
+            appKeepProps();
+            embodyMain();
+        } else if (callback) {
+            callback(data);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        let button = document.querySelector('main button');
+        button.classList.remove('progressed');
+        button.disabled = false;
+    });
+    //~ .finally(() => {
+        //~ let button = document.querySelector('main button');
+        //~ button.classList.remove('progressed');
+        //~ button.disabled = false;
+    //~ });
 }
 
 
 // ok
 function saveProfile() {
     const profile_id = appGetProfileByHash()[9];
-    if (profile_id != prop_profile[9] && event.target.className == 'deny') {
+    if (profile_id != window.prop_profile[9] && event.target.className == 'deny') {
+        if (!confirm('Удаляя этот профиль вы исключаете его из всех своих будущих выборок. Удалить?')) return;
         window.prop_deleted.push(profile_id);
         window.prop_deleted = window.prop_deleted.slice(-99);
-        appKeepProps('prop_deleted');
+        appSaveProps('prop_deleted');
         goHome();
     } else if (event.target.className == 'deny') {
-        reset();
+        if (confirm('Данные вашего профиля будут полностью стёрты. Списки удалённых вами и добавленных в Интересное будут очищены. Продолжить?')) {
+            if (profile_id) {
+                const p = window.prop_profile;
+                const data = {link: p[5], params: location.search, secret: p[12]};
+                fetch(`${database_url}/deny/${profile_id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(resp => {
+                    if (!resp.ok) {
+                        throw new Error('Profile has not been edited in DB');
+                    }
+                    return resp.json();
+                })
+                .then(data => {
+                    console.log('Profile has been deleted from DB:', data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+            reset();
+        }
     } else {
         for (let i=0; i<11; i++) {
             if (window._cached_[i] !== undefined) {
+                var unverified = false;
+                var confirmed = undefined;
+                if ('678'.includes(i) && window._cached_[i] != parseFloat(window._cached_[i])) {
+                    event.target.disabled = true;
+                    return;
+                }
+                if ('1236'.includes(i) && window.prop_profile[i] != window._cached_[i]) {
+                    if (window.prop_verified && confirmed == undefined) confirmed = confirm('Вы изменили один из ключевых параметров (социотип, психотип, пол или возраст). Отметка о верификации, если она у вас была, аннулируется. Продолжить?');
+                    if (window.prop_verified && !confirmed) {
+                        return;
+                    } else {
+                        window.prop_profile[4] = 0;
+                        window.prop_verified = 0;
+                        unverified = true;
+                    }
+                }
+                if ((i == 6 && window.prop_profile[6] != window._cached_[6]) || (window.prop_profile[3] != window._cached_[3])) {
+                    window.prop_age = _defaults().prop_age;
+                    let age = (new Date().getFullYear() - window._cached_[6]) || 99;
+                    //~ ld = window._cached_[3] == 1 && -9 || -3;
+                    //~ hd = window._cached_[3] == 1 && 3 || 9;
+                    ld = -5;
+                    hd = 5;
+                    window.prop_age[0] = Math.max(Math.min(window.prop_age[0], age), age + ld)
+                    window.prop_age[1] = Math.max(Math.min(window.prop_age[1], age), age + hd)
+                    appKeepProps('prop_age');
+                }
                 window.prop_profile[i] = window._cached_[i];
             }
         }
         window.prop_profile[9] = window.prop_profile[9] || 0;
-        appSaveProps('prop_profile');
+        appSaveProps(['prop_profile', 'prop_verified']);
         const p = window.prop_profile;
         const data = {name: p[0], link: p[5], image: p[10], params: location.search, secret: p[12]};
         fetch(`${database_url}/edit/${p[1]}/${p[2]}/${p[3]}/${p[6]}/${parseFloat(p[7]).toFixed(3)}/${parseFloat(p[8]).toFixed(3)}`, {
@@ -1132,12 +1515,166 @@ function saveProfile() {
             console.log('Profile has been edited in DB:', data);
             window.prop_profile[9] = data.id;
             appSaveProps('prop_profile');
+            window.prop_mode = -1;
+            appKeepProps('prop_mode');
+            if (!window.prop_verified && !window.prop_paid) {
+                location.hash = 'verify';
+            } else {
+                goHome();
+            }
         })
         .catch(error => {
             console.error('Error:', error);
+            appSaveProps('prop_profile');
+            window.prop_mode = -1;
+            appKeepProps('prop_mode');
+            if (!window.prop_verified && !window.prop_paid) {
+                location.hash = 'verify';
+            } else {
+                goHome();
+            }
         });
-        history.back();
     }
+}
+
+
+// ok
+function verifyProfile() {
+    if (!confirm('Подтверждаете верификацию профиля?')) return;
+    const profile = appGetProfileByHash();
+    const data = {link: window.prop_profile[5], verified: profile[5], params: location.search, secret: window.prop_profile[12]};
+    fetch(`${database_url}/verify/${profile[9]}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(resp => {
+        if (!resp.ok) {
+            throw new Error('Profile has not been verified');
+        }
+        return resp.json();
+    })
+    .then(data => {
+        console.log('Result:', data);
+        var item;
+        window.prop_profiles.some((p, i) => {
+            if (p[9] == profile[9]) {
+                item = i;
+                return true;
+            }
+        });
+        if (window.prop_profile[9] == profile[9]) {
+            window.prop_profile[4] = data.verified;
+            appSaveProps('prop_profile');
+        } else if (item != undefined) {
+            window.prop_profiles[item][4] = data.verified;
+        }
+        item = undefined;
+        (window.prop_paid_users || []).some((p, i) => {
+            if (p[9] == profile[9]) {
+                item = i;
+                return true;
+            }
+        });
+        if (item != undefined) delete(window.prop_paid_users[item]);
+        embody();
+    })
+    .catch(error => {
+        alert(error);
+    });
+}
+
+
+// ok
+function blockProfile(id) {
+    if (!confirm('Подтверждаете теневой бан профиля?')) return;
+    const profile = appGetProfileByHash(id);
+    const data = {link: window.prop_profile[5], params: location.search, secret: window.prop_profile[12]};
+    fetch(`${database_url}/block/${profile[9]}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(resp => {
+        if (!resp.ok) {
+            throw new Error('Profile has not been blocked');
+        }
+        return resp.json();
+    })
+    .then(data => {
+        console.log('Result:', data);
+        var item;
+        window.prop_profiles.some((p, i) => {
+            if (p[9] == profile[9]) {
+                item = i;
+                return true;
+            }
+        });
+        if (item != undefined) delete(window.prop_profiles[item]);
+        document.getElementById('admin_controls').hidden = true;
+        //~ item = undefined;
+        //~ (window.prop_new_users || []).some((p, i) => {
+            //~ if (p[9] == profile[9]) {
+                //~ item = i;
+                //~ return true;
+            //~ }
+        //~ });
+        //~ if (item != undefined) delete(window.prop_new_users[item]);
+        embody();
+        goHome();
+    })
+    .catch(error => {
+        alert(error);
+    });
+}
+
+
+// ok
+function acceptProfile(id) {
+    const profile = appGetProfileByHash(id);
+    const data = {link: window.prop_profile[5], params: location.search, secret: window.prop_profile[12]};
+    fetch(`${database_url}/accept/${profile[9]}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(resp => {
+        if (!resp.ok) {
+            throw new Error('Profile has been accepted');
+        }
+        return resp.json();
+    })
+    .then(data => {
+        console.log('Result:', data);
+        var item;
+        window.prop_profiles.some((p, i) => {
+            if (p[9] == profile[9]) {
+                item = i;
+                return true;
+            }
+        });
+        if (item != undefined) delete(window.prop_profiles[item]);
+        document.getElementById('admin_controls').hidden = true;
+        //~ item = undefined;
+        //~ (window.prop_new_users || []).some((p, i) => {
+            //~ if (p[9] == profile[9]) {
+                //~ item = i;
+                //~ return true;
+            //~ }
+        //~ });
+        //~ if (item != undefined) delete(window.prop_new_users[item]);
+        embody();
+        goHome();
+    })
+    .catch(error => {
+        alert(error);
+    });
 }
 
 
@@ -1165,35 +1702,54 @@ function reset() {
     _reset();
     appSaveProps();
     appKeepProps();
-    embodyMain();
+    goHome();
 }
 
 
 function findMe() {
-    const status = document.querySelector('#status');
-    const input = document.querySelector('input[name="location"]');
-    input.value = '';
-    
-    function success(position) {
-        const lat = parseFloat(position.coords.latitude.toFixed(1)).toFixed(3);
-        const lon = parseFloat(position.coords.longitude.toFixed(1)).toFixed(3);
-        status.textContent = "";
-        input.value = `${lat}, ${lon}`;
-        appCachedProfileValue(profile_map.indexOf('lat'), lat);
-        appCachedProfileValue(profile_map.indexOf('lon'), lon);
-
-        //~ mapLink.href = `https://www.openstreetmap.org/#map=18/${latitude}/${longitude}`;
-    }
-
-    function error() {
-        status.textContent = "Невозможно получить ваше местоположение";
-    }
-
-    if (!navigator.geolocation) {
-        status.textContent = "Geolocation не поддерживается вашим браузером";
+    const err_msg = 'Узнать ваше местоположение не удалось. Приложение не получило разрешения на доступ к этой функции или произошла какая-то ошибка.';
+    const control = document.querySelector('[data-name="profile"] input[name="location"]');
+    control.value = '';
+    control.classList.add('progressed');
+    if (window.vk_user_id) {
+        vkBridge.send('VKWebAppGetGeodata')
+        .then((data) => { 
+            if (data.available) {
+                const lat = parseFloat(data.lat.toFixed(1)).toFixed(3);
+                const lon = parseFloat(data.long.toFixed(1)).toFixed(3);
+                control.value = `${lat}, ${lon}`;
+                appCachedProfileValue(profile_map.indexOf('lat'), lat);
+                appCachedProfileValue(profile_map.indexOf('lon'), lon);
+                changedProfile(null, control);
+            } else {
+                throw new Error();
+            }
+        })
+        .catch((error) => {
+            alert(err_msg);
+        })
+        .finally(() => {
+            control.classList.remove('progressed');
+        });
     } else {
-        status.textContent = "Определение местоположения…";
-        navigator.geolocation.getCurrentPosition(success, error);
+        function success(position) {
+            control.classList.remove('progressed');
+            const lat = parseFloat(position.coords.latitude.toFixed(1)).toFixed(3);
+            const lon = parseFloat(position.coords.longitude.toFixed(1)).toFixed(3);
+            control.value = `${lat}, ${lon}`;
+            appCachedProfileValue(profile_map.indexOf('lat'), lat);
+            appCachedProfileValue(profile_map.indexOf('lon'), lon);
+            changedProfile(null, control);
+        }
+        function error() {
+            control.classList.remove('progressed');
+            displayAlert(err_msg);
+        }
+        if (!navigator.geolocation) {
+            displayAlert(err_msg);
+        } else {
+            navigator.geolocation.getCurrentPosition(success, error);
+        }
     }
 }
 
@@ -1201,6 +1757,377 @@ function findMe() {
 
 
 
+function maxDistanceFromMe(lat, lon) {
+    const dlat = (Math.abs(window.prop_profile[7] - lat) || 0.001) * 111;
+    const dlon = (Math.abs(window.prop_profile[8] - lon) || 0.001) * 111;
+    return Math.round(Math.sqrt(dlat ** 2 + dlon ** 2) / 100) * 100 || 100;
+}
 
-//~ https://www.openstreetmap.org/#map=12/55.0100/82.9300
-//~ https://www.google.com/maps/place/55.0,82.9/@55.0,82.9,100000m
+
+
+function pay(type) {
+    if (type == 1) var title = 'verification';
+    else if (type == 2) var title = 'autoverification';
+    else return;
+    vkBridge
+    .send('VKWebAppShowOrderBox', { 
+        type: 'item',
+        item: title,
+    })
+    .then((data) => {
+    if (data.success) {
+        window.prop_paid = type;
+        window.prop_verified = type;
+        window.prop_profile[4] = type;
+        appSaveProps('prop_paid');
+        location.hash = 'profile';
+    }})
+    .catch((error) => {
+        console.log(error);
+    });
+}
+
+
+// ok
+function share() {
+    vkBridge.send('VKWebAppShare', {
+        text: 'Суперклёвое приложение!'
+    });
+}
+
+
+// ok
+function recommend() {
+    vkBridge.send('VKWebAppRecommend')
+    .then((data) => { 
+        if (data.result) {
+            window.vk_is_recommended = 1;
+            redoSocialButtons(true);
+        }
+    })
+    .catch(() => {
+        //~ alert('Эта функция будет доступна после публикации приложения в каталоге.');
+    });
+}
+
+
+// ok
+function allowNotifications() {
+    vkBridge.send('VKWebAppAllowNotifications')
+    .then((data) => { 
+        if (data.result) {
+            window.vk_are_notifications_enabled = 1;
+            redoSocialButtons(true);
+        }
+    })
+    .catch(() => {
+        //~ alert('Эта функция будет доступна после публикации приложения в каталоге.');
+    });
+}
+
+
+// ok
+function addToFavorites() {
+    vkBridge.send('VKWebAppAddToFavorites')
+    .then((data) => { 
+        if (data.result) {
+            window.vk_is_favorite = 1;
+            redoSocialButtons(true);
+        }
+    });
+}
+
+
+const msg_verify = `Чтобы подтвердить правильность определения вами своего социотипа и&nbsp;психотипа или получить любую дополнительную консультацию по этой теме, обратитесь в личные сообщения <a class="care" onclick="visit()">к авторам приложения</a>. Базовая стоимость консультации или верификации <span class="mode-vk">500 рублей</span><span class="mode-web">9 pkoin</span>.`;
+
+
+// ok
+function displayAlert(html) {
+    const node = document.getElementById('alert');
+    const msg = node.querySelector('div');
+    msg.querySelector('div').innerHTML = html;
+    function display(scroll) {
+        node.hidden = false;
+        //~ position = (window.innerHeight / 2) - (msg.offsetHeight / 2) + scroll;
+        //~ msg.style.marginTop = `${position}px`;
+        msg.style.marginTop = `calc(50vh - ${(msg.offsetHeight / 2)}px)`;
+    }
+    if (window.vk_user_id) {
+        vkBridge.send('VKWebAppScrollTop')
+        .then((data) => { 
+            if (data.scrollTop >= 0) {
+                node.hidden = false;
+                position = data.scrollTop + 144;
+                msg.style.marginTop = `${position}px`;
+            }
+        })
+        .catch((error) => {
+            //~ display(window.scrollY);
+            display();
+        });
+    } else {
+        //~ display(window.scrollY);
+        display();
+    }
+}
+
+
+
+function openWallPost(post_id, url) {
+    if (window.vk_user_id) {
+        vkBridge.send('VKWebAppOpenWallPost', {
+            owner_id: -117170606,
+            post_id: post_id || 354
+        })
+        .then((data) => { 
+            if (!data.result) {
+                throw new Error();
+            }
+        })
+        .catch(() => {
+            visit(url || 'featured');
+        });
+    } else {
+        visit(url || 'featured');
+    }
+}
+
+
+// ok
+function switchPickOrReleaseButton(button, picked) {
+    if (picked) {
+        button.className = 'pick colspan-2';
+        button.innerText = 'Убрать из Интересного';
+    } else {
+        button.className = 'keep colspan-2';
+        button.innerText = 'Добавить в Интересное';
+        
+    }
+}
+
+
+// ok
+function pickOrRelease() {
+    const profile_id = appGetProfileByHash()[9];
+    if (!window.prop_picked.includes(profile_id)) {
+        window.prop_picked.push(profile_id);
+        window.prop_picked = window.prop_picked.slice(-99);
+        appSaveProps('prop_picked');
+        switchPickOrReleaseButton(event.target, true);
+    } else {
+        var index = window.prop_picked.indexOf(profile_id);
+        window.prop_picked = [
+            ...window.prop_picked.slice(0, index),
+            ...window.prop_picked.slice(index + 1)
+        ];
+        if (window.prop_mode == 2) {
+            index = undefined;
+            window.prop_profiles.some((p, i) => {
+                if (p[9] == profile_id) {
+                    index = i;
+                    return true;
+                }
+            });
+            if (index >= 0) {
+                window.prop_profiles = [
+                    ...window.prop_profiles.slice(0, index),
+                    ...window.prop_profiles.slice(index + 1)
+                ];
+            }
+        }
+        appSaveProps('prop_picked');
+        switchPickOrReleaseButton(event.target, false);
+    }
+}
+
+
+// ok
+function vkTestCallback(json_data) {
+    if (json_data.response) {
+        console.log(json_data.response);
+    } else if (json_data.error && json_data.error.error_msg) {
+        alert(json_data.error && json_data.error.error_msg || `{json_data}` || 'Unknown error.');
+    }
+}
+
+
+function fetchPaid() {
+    fetch(`${database_url}/paid`)
+    .then(resp => {
+        if (!resp.ok) {
+            throw new Error();
+        }
+        return resp.json();
+    })
+    .then(data => {
+        console.log('Fetched paid:', data.length);
+        window.prop_profiles = [window.prop_profile, ...data];
+        appKeepProps();
+        embodyMain();
+    })
+    .catch((error) => {
+        alert('Упс, что-то пошло не так :(');
+        let button = document.querySelector('main button');
+        button.classList.remove('progressed');
+        button.disabled = false;
+    });
+}
+
+
+function fetchNews() {
+    fetch(`${database_url}/news`)
+    .then(resp => {
+        if (!resp.ok) {
+            throw new Error();
+        }
+        return resp.json();
+    })
+    .then(data => {
+        console.log('Fetched news:', data.length);
+        window.prop_profiles = data;
+        appKeepProps();
+        embodyMain();
+    })
+    .catch((error) => {
+        alert('Упс, что-то пошло не так :(');
+        let button = document.querySelector('main button');
+        button.classList.remove('progressed');
+        button.disabled = false;
+    });
+}
+
+
+function fetchAutoverified() {
+    fetch(`${database_url}/autoverified`)
+    .then(resp => {
+        if (!resp.ok) {
+            throw new Error();
+        }
+        return resp.json();
+    })
+    .then(data => {
+        console.log('Fetched autoverified:', data.length);
+        window.prop_profiles = data;
+        //~ window.prop_profiles = [window.prop_profile, ...data];
+        appKeepProps();
+        embodyMain();
+    })
+    .catch((error) => {
+        alert('Упс, что-то пошло не так :(');
+        let button = document.querySelector('main button');
+        button.classList.remove('progressed');
+        button.disabled = false;
+    });
+}
+
+
+function fetchEdited() {
+    fetch(`${database_url}/edited`)
+    .then(resp => {
+        if (!resp.ok) {
+            throw new Error();
+        }
+        return resp.json();
+    })
+    .then(data => {
+        console.log('Fetched edited:', data.length);
+        window.prop_profiles = data;
+        //~ window.prop_profiles = [window.prop_profile, ...data];
+        appKeepProps();
+        embodyMain();
+    })
+    .catch((error) => {
+        alert('Упс, что-то пошло не так :(');
+        let button = document.querySelector('main button');
+        button.classList.remove('progressed');
+        button.disabled = false;
+    });
+}
+
+
+function fetchNoticed() {
+    fetch(`${database_url}/noticed`)
+    .then(resp => {
+        if (!resp.ok) {
+            throw new Error();
+        }
+        return resp.json();
+    })
+    .then(data => {
+        console.log('Fetched news:', data.length);
+        window.prop_profiles = data;
+        //~ window.prop_profiles = [window.prop_profile, ...data];
+        appKeepProps();
+        embodyMain();
+    })
+    .catch((error) => {
+        alert('Упс, что-то пошло не так :(');
+        let button = document.querySelector('main button');
+        button.classList.remove('progressed');
+        button.disabled = false;
+    });
+}
+
+
+// ok
+function fetchFriends() {
+    vkApiRequest('friends.get', {count: 500, fields: 'sex'}, 'friends', 'vkFriendsCallback');
+}
+
+
+// ok
+function vkFriendsCallback(json_data) {
+    if (json_data.response) {
+        let list = json_data.response.items.filter(i => i.sex == window.prop_profile[3]);
+        list = `${list.map(i => i.id)}`;
+        fetch(`${database_url}/vkpick`, {method: 'POST', body: list})
+        .then(resp => {
+            if (!resp.ok) {
+                throw new Error();
+            }
+            return resp.json();
+        })
+        .then(data => {
+            console.log('Fetched profiles:', data.length);
+            window.prop_profiles = [window.prop_profile, ...data];
+            appKeepProps();
+            embodyMain();
+        })
+        .catch((error) => {
+            alert('Не удалось, к сожалению :(');
+            let button = document.querySelector('main button');
+            button.classList.remove('progressed');
+            button.disabled = false;
+        });
+    } else if (json_data.error && json_data.error.error_msg) {
+        alert(json_data.error && json_data.error.error_msg || `{json_data}` || 'Unknown error');
+    }
+}
+
+
+// ok
+function vkApiRequest(method, params, scope, callback) {
+    vkBridge.send('VKWebAppGetAuthToken', { 
+        app_id: parseInt(new URLSearchParams(location.search).get('vk_app_id')), 
+        scope: scope
+    })
+    .then((data) => { 
+        if (data.access_token) {
+            params.access_token = data.access_token;
+            params.callback = callback;
+            params.v = 5.199;
+            const searchParams = new URLSearchParams();
+            Object.keys(params || {}).forEach((k) => {
+                searchParams.append(k, params[k]);
+            });
+            const script = document.createElement('script');
+            script.src = `https://api.vk.ru/method/${method}?${searchParams.toString()}`;
+            document.getElementsByTagName("head")[0].appendChild(script);
+        } else {
+            throw new Error();
+        }
+    })
+    .catch((error) => {
+        eval(`${callback}(${JSON.stringify({error: {error_msg: "Доступ не был получен"}})})`);
+    });
+}
