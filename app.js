@@ -1878,8 +1878,8 @@ function displayAlert(html) {
 function openWallPost(post_id, url) {
     if (window.vk_user_id) {
         vkBridge.send('VKWebAppOpenWallPost', {
-            owner_id: -117170606,
-            post_id: post_id || 354
+            owner_id: -235782738,
+            post_id: post_id || 13
         })
         .then((data) => { 
             if (!data.result) {
