@@ -1267,20 +1267,22 @@ function acceptTestP() {
 
 function visit(name) {
     var map = {
-        'default': 'https://bastyon.com/sdrawerohs',
+        'default': 'https://bastyon.com/psihosocionika',
         'hobbystu': 'https://vk.com/hobbystu',
         'featured': 'https://bastyon.com/index?video=1&v=49856f48491e9befd89252d3edda8a420d5eccab75731ed75dd6a782e33a3cd7',
         'lexigo': 'https://bastyon.com/index?video=1&v=fce8ddc8700a00693ee602e41cd768e7549aad59dacd7dad213e23a9af362c84',
         'pogodavdometer': 'https://bastyon.com/index?v=888d76fcbe1e28cc25b412d46344fd49e6c69c013743f14f1a52ef066d60bbf2&video=1&ref=PHN3UprgHjMPQsiXkqEju9bAqCmD73H6B9',
         'lifetuner': 'https://bastyon.com/post?s=af2e4950af5286ef411949b350ea7d40aa62f3036dca6559f19f1136f5fce659&ref=PHN3UprgHjMPQsiXkqEju9bAqCmD73H6B9',
+        'verify': 'https://vk.com/market/product/psikhosotsiotipirovanie-235782738-13989406',
     }
     var vk_map = {
-        'default': 'https://vk.com/shorewards',
+        'default': 'https://vk.com/psihosocionika',
         'hobbystu': 'https://vk.com/hobbystu',
-        'featured': 'https://vk.com/shorewards?w=wall-117170606_354',
+        'featured': 'https://vk.com/psihosocionika?w=wall-235782738_13',
         'lexigo': 'https://vk.com/app54185696',
         'pogodavdometer': 'https://vk.com/pogodavdometer',
         'lifetuner': 'https://vk.com/progressinator',
+        'verify': 'https://vk.com/market/product/psikhosotsiotipirovanie-235782738-13989406',
     }
     openExternalLink((window.vk_user_id && vk_map || map)[name || 'default'] || name);
 }

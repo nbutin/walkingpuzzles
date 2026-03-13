@@ -12,15 +12,15 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="description" content="Приложение для умного поиска 'половинки' и проникновения в тайну гармоничных отношений">
     <title>Люди как пазлы</title>
-    <link rel="stylesheet" href="core.css?v=63">
-    <link rel="stylesheet" href="app.css?v=63">
+    <link rel="stylesheet" href="core.css?v=66">
+    <link rel="stylesheet" href="app.css?v=66">
     <link rel="manifest" href="app.webmanifest">
     <link rel="apple-touch-icon" href="icons/app192.png">
     <link rel="icon" href="icons/app48.png">
     <link rel="shortcut icon" href="icons/app48.png">
-    <script type="text/javascript" src="core.js?v=63"></script>
-    <script type="text/javascript" src="data.js?v=63"></script>
-    <script type="text/javascript" src="app.js?v=63"></script>
+    <script type="text/javascript" src="core.js?v=66"></script>
+    <script type="text/javascript" src="data.js?v=66"></script>
+    <script type="text/javascript" src="app.js?v=66"></script>
 <!--
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
 -->
@@ -61,7 +61,7 @@
 <h2 class="care">Верификация</h2>
 <div>
     <hr/>
-    <p><strong>Значки неверифицированных профилей на&nbsp;карте <em>выделены затемнением</em>. Проверка профилей позволяет повысить адекватность и эффективность поиска.</strong> Отметка о пройденной верификации означает, что авторы проекта пообщались с&nbsp;пользователем и убедились в том, что его реальные основные параметры <em class="pick">(социотип, психотип, пол и возраст)</em> соответствуют указанным в профиле. <em class="deny">Вероятность ошибки в&nbsp;определении психо- и социотипа такой проверкой не устраняется полностью, однако существенно уменьшается.</em> Если&nbsp;после проверки пользователь изменит какой-то из четырёх, перечисленных выше, параметров, отметка&nbsp;о верификации удаляется.</p>
+    <p><strong>Значки неверифицированных профилей на&nbsp;карте <em>выделены затемнением</em>. Проверка профилей позволяет повысить адекватность и эффективность поиска.</strong> Отметка о пройденной верификации означает, что авторы проекта пообщались с&nbsp;пользователем и убедились в том, что его реальные основные параметры <strong>(социотип, психотип, пол и возраст)</strong> соответствуют указанным в профиле (подробнее об этой услуге <a onclick="visit('verify')" class="know">читайте здесь</a>). <!--em class="deny">Вероятность ошибки в&nbsp;определении психо- и социотипа такой проверкой не устраняется полностью, однако существенно уменьшается.</em--> Если&nbsp;после проверки пользователь изменит какой-то из четырёх, перечисленных выше, параметров, отметка о&nbsp;верификации удаляется.</p>
 <!--
     <p class="care"><strong>Важно типировать себя правильно</strong>,<br/> потому что иначе оценки и рекомендации, которые вы здесь получите будут ложными и&nbsp;не принесут вам никакой пользы.</p>
 -->
@@ -75,7 +75,7 @@
     <hr/>
     <div class="grid">
         <button class="keep colspan-2 mode-vk" onclick="pay(2)">Автоверификация</button>
-        <button class="care colspan-2" onclick="displayAlert(msg_verify)">Заказать верификацию</button>
+        <button class="care colspan-2" onclick="visit('verify')">Заказать верификацию</button>
         <button class="colspan-2" onclick="goHome()">Вернуться к карте</button>
     </div>
 </fieldset>
@@ -167,10 +167,16 @@
     <p>Природа человеческой души поддаётся логическому осмыслению в степени, достаточной для того, чтобы получать от этого осмысления и понимания ощутимую пользу. Под словом "душа" на практике мы обычно подразумеваем нечто отвечающее за&nbsp;восприятие окружающего мира, за&nbsp;предрасположенности, предпочтения и&nbsp;мотивы. <strong>Приложение "Люди как пазлы" поможет нам научиться лучше видеть и&nbsp;понимать души друг друга, определять уровень их сочетаемости и строить на этой основе гармоничные отношения.</strong></p>
     <p class="grow"><strong>Гармония — это непротиворечащее дополнение</strong>, а гармоничные отношения вдобавок к комфорту подразумевают плодотворность и взаимное развитие.</p>
 </div>
+<div class="rest">
+    <hr/>
+    <p><a onclick="visit()" class="know">Психосоционика — я и другие «я»</a>.<br/> Всех, кому интересно познавать непознанное в себе, открывать сокрытое во взаимо&shy;действиях с другими, всех любознательных приглашаем в <a onclick="visit()" class="pick">наш уютный клуб</a>.</p>
+</div>
+<!--
 <div>
     <hr/>
     <p><strong>Авторы:</strong> Николай <a onclick="visit()" class="know">@sdrawerohs</a> и&nbsp;Алиса <a onclick="visit('hobbystu')" class="know">@hobbystu</a>. Наши проекты: <a onclick="visit('lifetuner')" class="pick">Прогрессинатор</a>, <a onclick="visit('pogodavdometer')" class="care">Погодавдометр</a>, <a onclick="visit('lexigo')" class="grow">Бедовый Инглиш</a> и другое. Любая ваша&nbsp;поддержка поможет приблизить рождение нового шедевра.</p>
 </div>
+-->
 <fieldset>
     <hr/>
     <div class="grid">
@@ -379,7 +385,7 @@
         <div>
             <p><strong>В плане <em class="pick">тактики</em></strong> я по своей <br/> природе скорее человек:</p>
             <p class="pick">
-                <label class="radio"><input type="radio" name="JP" value="J"> правила (организация)</label>
+                <label class="radio"><input type="radio" name="JP" value="J"> правила (системность)</label>
                 <label class="radio"><input type="radio" name="JP" value="P"> ситуации (стихийность)</label>
             </p>
         </div>
@@ -399,7 +405,7 @@
 <h2>Определение психотипа</h2>
 <div>
     <hr/>
-    <p><strong>Выберите две сферы, в которых вы&nbsp;обычно более гибки или уступчивы</strong> (легче идёте на компромисс):</p>
+    <p><strong>Выберите две сферы, в которых вы&nbsp;обычно более гибки или уступчивы (легче идёте на компромисс):</strong></p>
     <form>
         <p class="know">
             <label><input type="radio" value="Ф"> сфера физического комфорта</label>
